@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
@@ -17,6 +17,18 @@ export default function Navbar() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [badgeBump, setBadgeBump] = useState(false);
+  const prevTotalItemsRef = useRef(totalItems);
+
+  useEffect(() => {
+    if (totalItems > prevTotalItemsRef.current) {
+      setBadgeBump(true);
+      const timer = setTimeout(() => setBadgeBump(false), 500);
+      prevTotalItemsRef.current = totalItems;
+      return () => clearTimeout(timer);
+    }
+    prevTotalItemsRef.current = totalItems;
+  }, [totalItems]);
 
   // Función para normalizar texto eliminando tildes y diacríticos
   const normalizeText = (text: string | undefined): string => {
@@ -106,7 +118,11 @@ export default function Navbar() {
               <ShoppingBag className="w-5 h-5 sm:w-6 sm:h-6 stroke-[1.5]" />
               <span
                 suppressHydrationWarning
-                className="absolute top-1 right-1 flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-semibold tracking-tighter text-white bg-neutral-900 rounded-full"
+                className={`absolute top-1 right-1 flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-semibold tracking-tighter text-white rounded-full transition-all duration-300 ${
+                  badgeBump
+                    ? "scale-125 bg-[#D89BA3] shadow-md ring-2 ring-white"
+                    : "scale-100 bg-neutral-900"
+                }`}
               >
                 {totalItems}
               </span>

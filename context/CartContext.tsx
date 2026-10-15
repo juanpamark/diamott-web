@@ -9,7 +9,7 @@ interface CartContextType {
   isOpen: boolean;
   openCart: () => void;
   closeCart: () => void;
-  addToCart: (product: Product, quantity?: number) => void;
+  addToCart: (product: Product, quantity?: number, openDrawer?: boolean) => void;
   removeFromCart: (productId: string) => void;
   updateQuantity: (productId: string, quantity: number) => void;
   clearCart: () => void;
@@ -53,21 +53,26 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const openCart = useCallback(() => setIsOpen(true), []);
   const closeCart = useCallback(() => setIsOpen(false), []);
 
-  const addToCart = useCallback((product: Product, quantity: number = 1) => {
-    setItems((prevItems) => {
-      const existingIndex = prevItems.findIndex((item) => item.product.id === product.id);
-      if (existingIndex > -1) {
-        const updated = [...prevItems];
-        updated[existingIndex] = {
-          ...updated[existingIndex],
-          quantity: updated[existingIndex].quantity + quantity,
-        };
-        return updated;
+  const addToCart = useCallback(
+    (product: Product, quantity: number = 1, openDrawer: boolean = false) => {
+      setItems((prevItems) => {
+        const existingIndex = prevItems.findIndex((item) => item.product.id === product.id);
+        if (existingIndex > -1) {
+          const updated = [...prevItems];
+          updated[existingIndex] = {
+            ...updated[existingIndex],
+            quantity: updated[existingIndex].quantity + quantity,
+          };
+          return updated;
+        }
+        return [...prevItems, { product, quantity }];
+      });
+      if (openDrawer) {
+        setIsOpen(true);
       }
-      return [...prevItems, { product, quantity }];
-    });
-    setIsOpen(true);
-  }, []);
+    },
+    []
+  );
 
   const removeFromCart = useCallback((productId: string) => {
     setItems((prevItems) => prevItems.filter((item) => item.product.id !== productId));
