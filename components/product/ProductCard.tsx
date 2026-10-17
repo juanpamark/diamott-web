@@ -15,12 +15,14 @@ interface ProductCardProps {
 export default function ProductCard({ product, index }: ProductCardProps) {
   const { openQuickView } = useCatalog();
   const { addToCart } = useCart();
-  const [imgSrc, setImgSrc] = useState(product.imagen_url || BRAND.fallbackImageUrl);
+  const [imgSrc, setImgSrc] = useState(
+    product.imagen_principal_url || product.imagen_url || BRAND.fallbackImageUrl
+  );
   const [hasError, setHasError] = useState(false);
   const [justAdded, setJustAdded] = useState(false);
 
-  // Regla obligatoria: índice 0 y 1 de cualquier cuadrícula llevan badge NUEVO
-  const isNew = index === 0 || index === 1;
+  // Badge NUEVO: marcado como es_nuevo en el CSV, o primeros índices de cuadrícula
+  const isNew = product.es_nuevo || index === 0 || index === 1;
 
   // Calificación en formato decimal (ej: 5.0, 4.8)
   const ratingFormatted = Number(product.calificacion || 5).toFixed(1);
@@ -63,10 +65,22 @@ export default function ProductCard({ product, index }: ProductCardProps) {
           fill
           sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
           onError={handleImageError}
-          className="object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+          className={`object-cover transition-all duration-500 ease-out ${
+            product.imagen_secundaria_url ? "group-hover:opacity-0" : "group-hover:scale-105"
+          }`}
         />
 
-        {/* Badge "NUEVO" (índices 0 y 1) */}
+        {product.imagen_secundaria_url && (
+          <Image
+            src={product.imagen_secundaria_url}
+            alt={`${product.nombre_producto} - Detalle`}
+            fill
+            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+            className="object-cover transition-all duration-500 ease-out opacity-0 group-hover:opacity-100 group-hover:scale-105"
+          />
+        )}
+
+        {/* Badge "NUEVO" */}
         {isNew && (
           <span className="absolute top-2 left-2 z-10 px-2 py-0.5 text-[9px] font-bold tracking-widest uppercase bg-[#1C1C1C] text-white rounded-none shadow-xs">
             NUEVO

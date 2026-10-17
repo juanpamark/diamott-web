@@ -4,8 +4,8 @@ import { useState, useMemo, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
-import { ShoppingBag, Search, X, Menu } from "lucide-react";
-import { BRAND, NAV_LINKS, Product } from "@/lib/constants";
+import { ShoppingBag, Search, X, Menu, ChevronDown } from "lucide-react";
+import { BRAND, CATEGORIES, NAV_LINKS, Product } from "@/lib/constants";
 import { useCatalog } from "@/context/CatalogContext";
 import { useCart } from "@/context/CartContext";
 
@@ -17,8 +17,12 @@ export default function Navbar() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isCategoriesDropdownOpen, setIsCategoriesDropdownOpen] = useState(false);
+  const [isMobileCategoriesOpen, setIsMobileCategoriesOpen] = useState(false);
   const [badgeBump, setBadgeBump] = useState(false);
+
   const prevTotalItemsRef = useRef(totalItems);
+  const dropdownRef = useRef<HTMLLIElement>(null);
 
   useEffect(() => {
     if (totalItems > prevTotalItemsRef.current) {
@@ -29,6 +33,17 @@ export default function Navbar() {
     }
     prevTotalItemsRef.current = totalItems;
   }, [totalItems]);
+
+  // Cerrar dropdown al hacer clic fuera
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsCategoriesDropdownOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   // Función para normalizar texto eliminando tildes y diacríticos
   const normalizeText = (text: string | undefined): string => {
@@ -62,7 +77,7 @@ export default function Navbar() {
   return (
     <header className="sticky top-0 z-40 w-full bg-white/95 backdrop-blur-md border-b border-neutral-100 transition-all">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="relative flex items-center justify-between py-4">
+        <div className="relative flex items-center justify-between py-3 sm:py-4">
           {/* Lado Izquierdo: Botón Menú Móvil (Hamburguesa) */}
           <div className="w-20 sm:w-28 flex items-center">
             <button
@@ -79,18 +94,22 @@ export default function Navbar() {
             </button>
           </div>
 
-          {/* CENTRO: Logotipo Puramente Tipográfico de Alta Gama */}
+          {/* CENTRO: Logotipo Puramente Gráfico Oficial */}
           <Link
             href="/"
-            className="flex flex-col items-center justify-center text-center group focus:outline-none"
+            className="flex items-center justify-center group focus:outline-none"
             aria-label={`${BRAND.name} - Inicio`}
           >
-            <span className="font-playfair font-bold text-2xl sm:text-3xl tracking-widest text-neutral-900 group-hover:text-black transition-colors">
-              DI&apos;AMOTT
-            </span>
-            <span className="text-[8px] sm:text-[10px] tracking-[0.25em] text-neutral-500 uppercase font-medium mt-0.5">
-              BEAUTY AND ACCESSORIES
-            </span>
+            <div className="relative h-14 sm:h-20 w-44 sm:w-64">
+              <Image
+                src={BRAND.officialLogoUrl}
+                alt="Di'amott"
+                fill
+                priority
+                sizes="(max-width: 640px) 176px, 256px"
+                className="object-contain transition-transform duration-300 group-hover:scale-102"
+              />
+            </div>
           </Link>
 
           {/* Lado Derecho: Buscador y Carrito */}
@@ -138,9 +157,9 @@ export default function Navbar() {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Buscar en todo el catálogo (ej. labial, base, serum, bolso)..."
+                placeholder="Buscar en todo el catálogo (ej. labial, base, serum, bolso, aretes)..."
                 autoFocus
-                className="w-full pl-10 pr-10 py-2.5 text-xs sm:text-sm bg-neutral-50 border border-neutral-200 rounded-full text-neutral-900 placeholder-neutral-400 focus:outline-none focus:ring-1 focus:ring-neutral-900 focus:border-neutral-900"
+                className="w-full pl-10 pr-10 py-2.5 text-xs sm:text-sm bg-neutral-50 border border-neutral-200 rounded-full focus:outline-none focus:border-neutral-900 focus:bg-white transition-all text-neutral-900 placeholder:text-neutral-400"
               />
               <Search className="absolute left-3.5 top-3 w-4 h-4 text-neutral-400" />
               {searchQuery && (
@@ -170,7 +189,7 @@ export default function Navbar() {
                         >
                           <div className="relative w-12 h-12 aspect-square rounded-sm overflow-hidden bg-neutral-100 shrink-0">
                             <Image
-                              src={product.imagen_url || BRAND.fallbackImageUrl}
+                              src={product.imagen_principal_url || product.imagen_url || BRAND.fallbackImageUrl}
                               alt={product.nombre_producto}
                               fill
                               sizes="48px"
@@ -202,20 +221,60 @@ export default function Navbar() {
 
         {/* Enlaces de Navegación Centrados (Desktop) */}
         <nav
-          className="hidden md:block pb-3 overflow-x-auto no-scrollbar"
+          className="hidden md:block pb-3 overflow-visible"
           aria-label="Navegación principal"
         >
-          <ul className="flex items-center justify-center gap-6 lg:gap-10 min-w-max mx-auto px-2">
+          <ul className="flex items-center justify-center gap-6 lg:gap-9 min-w-max mx-auto px-2">
             {NAV_LINKS.map((link) => {
+              if (link.isDropdown) {
+                return (
+                  <li key="categories-dropdown" className="relative" ref={dropdownRef}>
+                    <button
+                      type="button"
+                      onClick={() => setIsCategoriesDropdownOpen(!isCategoriesDropdownOpen)}
+                      className={`text-xs sm:text-sm tracking-widest uppercase transition-all pb-1 border-b flex items-center gap-1 cursor-pointer select-none ${
+                        isCategoriesDropdownOpen
+                          ? "text-neutral-950 font-semibold border-neutral-900"
+                          : "text-neutral-600 font-medium border-transparent hover:text-neutral-950 hover:border-neutral-300"
+                      }`}
+                      aria-expanded={isCategoriesDropdownOpen}
+                    >
+                      <span>{link.label}</span>
+                      <ChevronDown
+                        className={`w-3.5 h-3.5 transition-transform duration-200 ${
+                          isCategoriesDropdownOpen ? "rotate-180" : ""
+                        }`}
+                      />
+                    </button>
+
+                    {/* Menú Dropdown Flotante */}
+                    {isCategoriesDropdownOpen && (
+                      <div className="absolute left-1/2 -translate-x-1/2 top-full mt-2 w-52 bg-white rounded-xl shadow-xl border border-neutral-100 py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
+                        {CATEGORIES.map((cat) => (
+                          <Link
+                            key={cat.id}
+                            href={cat.href}
+                            onClick={() => setIsCategoriesDropdownOpen(false)}
+                            className="block px-4 py-2.5 text-xs tracking-wider uppercase text-neutral-700 hover:text-neutral-950 hover:bg-neutral-50 transition-colors font-medium"
+                          >
+                            {cat.name}
+                          </Link>
+                        ))}
+                      </div>
+                    )}
+                  </li>
+                );
+              }
+
               const isActive = pathname === link.href;
               return (
                 <li key={link.href}>
                   <Link
                     href={link.href}
-                    className={`text-xs sm:text-sm tracking-widest lowercase transition-all pb-1 border-b ${
+                    className={`text-xs sm:text-sm tracking-widest uppercase transition-all pb-1 border-b ${
                       isActive
                         ? "text-neutral-950 font-semibold border-neutral-900"
-                        : "text-neutral-500 font-medium border-transparent hover:text-neutral-900 hover:border-neutral-300"
+                        : "text-neutral-600 font-medium border-transparent hover:text-neutral-950 hover:border-neutral-300"
                     }`}
                   >
                     {link.label}
@@ -229,15 +288,52 @@ export default function Navbar() {
         {/* Menú de Navegación Móvil Desplegable */}
         {isMobileMenuOpen && (
           <div className="md:hidden border-t border-neutral-100 py-4 animate-in fade-in duration-200">
-            <ul className="flex flex-col space-y-3 px-2">
+            <ul className="flex flex-col space-y-2 px-2">
               {NAV_LINKS.map((link) => {
+                if (link.isDropdown) {
+                  return (
+                    <li key="mobile-dropdown" className="border-b border-neutral-100/70 pb-2">
+                      <button
+                        type="button"
+                        onClick={() => setIsMobileCategoriesOpen(!isMobileCategoriesOpen)}
+                        className="w-full flex items-center justify-between py-2 text-sm tracking-widest uppercase font-medium text-neutral-700 hover:text-neutral-950 cursor-pointer"
+                      >
+                        <span>{link.label}</span>
+                        <ChevronDown
+                          className={`w-4 h-4 transition-transform duration-200 ${
+                            isMobileCategoriesOpen ? "rotate-180" : ""
+                          }`}
+                        />
+                      </button>
+
+                      {isMobileCategoriesOpen && (
+                        <div className="pl-4 py-1 space-y-1.5 border-l-2 border-[#D89BA3] my-1 ml-1">
+                          {CATEGORIES.map((cat) => (
+                            <Link
+                              key={cat.id}
+                              href={cat.href}
+                              onClick={() => {
+                                setIsMobileMenuOpen(false);
+                                setIsMobileCategoriesOpen(false);
+                              }}
+                              className="block py-1.5 text-xs tracking-wider uppercase text-neutral-600 hover:text-neutral-950"
+                            >
+                              {cat.name}
+                            </Link>
+                          ))}
+                        </div>
+                      )}
+                    </li>
+                  );
+                }
+
                 const isActive = pathname === link.href;
                 return (
-                  <li key={link.href}>
+                  <li key={link.href} className="border-b border-neutral-100/70 pb-1">
                     <Link
                       href={link.href}
                       onClick={() => setIsMobileMenuOpen(false)}
-                      className={`block py-2 text-sm tracking-widest lowercase transition-colors ${
+                      className={`block py-2 text-sm tracking-widest uppercase transition-colors ${
                         isActive
                           ? "text-neutral-950 font-semibold"
                           : "text-neutral-600 hover:text-neutral-950"

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
+import React, { createContext, useContext, useEffect, useState, useCallback, useMemo } from "react";
 import Papa from "papaparse";
 import { BRAND, Product } from "@/lib/constants";
 import { formatCurrency } from "@/lib/formatters";
@@ -13,8 +13,14 @@ interface RawProductRow {
   precio?: string | number;
   calificacion?: string | number;
   numero_resenas?: string | number;
+  imagen_principal_url?: string;
+  imagen_secundaria_url?: string;
   imagen_url?: string;
+  descripcion_corta?: string;
   disponible?: string | boolean;
+  es_nuevo?: string | boolean;
+  es_mas_vendido?: string | boolean;
+  es_promocion_banner?: string | boolean;
 }
 
 interface CatalogContextType {
@@ -23,6 +29,9 @@ interface CatalogContextType {
   error: string | null;
   refreshCatalog: () => void;
   getProductsByPage: (pageName: string) => Product[];
+  newProducts: Product[];
+  bestSellerProducts: Product[];
+  promoProduct: Product | null;
   selectedProduct: Product | null;
   openQuickView: (product: Product) => void;
   closeQuickView: () => void;
@@ -39,6 +48,12 @@ function sanitizeText(input: string | undefined): string {
   return String(input)
     .replace(/[<>]/g, "")
     .trim();
+}
+
+function checkBool(val: string | boolean | undefined): boolean {
+  if (typeof val === "boolean") return val;
+  const s = String(val ?? "").trim().toUpperCase();
+  return s === "SÍ" || s === "SI" || s === "TRUE" || s === "1";
 }
 
 export function CatalogProvider({ children }: { children: React.ReactNode }) {
@@ -82,7 +97,9 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
                   sanitizeText(row.id).toLowerCase() === "config_creadora" ||
                   sanitizeText(row.pagina).toLowerCase() === "config"
               );
-              const rawCreatorImg = sanitizeText(creatorRow?.imagen_url);
+              const rawCreatorImg = sanitizeText(
+                creatorRow?.imagen_principal_url || creatorRow?.imagen_url
+              );
               if (rawCreatorImg.startsWith("http://") || rawCreatorImg.startsWith("https://")) {
                 setCreatorImageUrl(rawCreatorImg);
               } else {
@@ -92,6 +109,13 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
               const parsedProducts: Product[] = results.data
                 .filter((row) => {
                   if (!row.id || !row.nombre_producto) return false;
+                  // Si es la fila de configuración de la creadora, omitirla del catálogo comercial
+                  if (
+                    sanitizeText(row.id).toLowerCase() === "config_creadora" ||
+                    sanitizeText(row.pagina).toLowerCase() === "config"
+                  ) {
+                    return false;
+                  }
 
                   const disponibleStr = String(row.disponible ?? "").trim().toUpperCase();
                   const isAvailable =
@@ -103,7 +127,7 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
                   return isAvailable;
                 })
                 .map((row, index) => {
-                  // Si viene con decimales como 35000.00 o $ 35.000,00 descartamos los 2 decimales finales para evitar inflar el precio
+                  // Precios: descartar decimales si vienen como 35000.00
                   const rawPriceStr = String(row.precio ?? "0").trim();
                   const withoutDecimals = rawPriceStr.replace(/[.,]\d{2}$/, "");
                   const cleanDigits = withoutDecimals.replace(/[^0-9]/g, "");
@@ -116,10 +140,18 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
 
                   const numericReviews = parseInt(String(row.numero_resenas ?? "0"), 10) || 0;
 
-                  const rawImageUrl = sanitizeText(row.imagen_url);
-                  const isValidUrl =
-                    rawImageUrl.startsWith("http://") || rawImageUrl.startsWith("https://");
-                  const safeImageUrl = isValidUrl ? rawImageUrl : BRAND.fallbackImageUrl;
+                  // Imágenes: soporte imagen_principal_url y retrocompatibilidad imagen_url
+                  const rawMainImg = sanitizeText(
+                    row.imagen_principal_url || row.imagen_url
+                  );
+                  const isMainValid =
+                    rawMainImg.startsWith("http://") || rawMainImg.startsWith("https://");
+                  const mainImageUrl = isMainValid ? rawMainImg : BRAND.fallbackImageUrl;
+
+                  const rawSecImg = sanitizeText(row.imagen_secundaria_url);
+                  const isSecValid =
+                    rawSecImg.startsWith("http://") || rawSecImg.startsWith("https://");
+                  const secondaryImageUrl = isSecValid ? rawSecImg : undefined;
 
                   return {
                     id: sanitizeText(row.id) || `prod-${index}`,
@@ -130,8 +162,14 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
                     precioFormateado: formatCurrency(numericPrice),
                     calificacion: numericRating,
                     numero_resenas: numericReviews,
-                    imagen_url: safeImageUrl,
+                    imagen_principal_url: mainImageUrl,
+                    imagen_secundaria_url: secondaryImageUrl,
+                    imagen_url: mainImageUrl,
+                    descripcion_corta: sanitizeText(row.descripcion_corta),
                     disponible: true,
+                    es_nuevo: checkBool(row.es_nuevo),
+                    es_mas_vendido: checkBool(row.es_mas_vendido),
+                    es_promocion_banner: checkBool(row.es_promocion_banner),
                   };
                 });
 
@@ -168,11 +206,34 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
 
   const getProductsByPage = useCallback(
     (pageName: string): Product[] => {
-      const normalizedTarget = pageName.trim().toLowerCase();
-      return products.filter(
-        (p) => p.pagina.trim().toLowerCase() === normalizedTarget
-      );
+      const target = pageName.trim().toLowerCase();
+      return products.filter((p) => {
+        const pPage = p.pagina.trim().toLowerCase();
+        if (pPage === target) return true;
+        if (
+          (target === "cuidado facial" || target === "cuidado-facial" || target === "skincare") &&
+          (pPage === "cuidado facial" || pPage === "skincare")
+        ) {
+          return true;
+        }
+        return false;
+      });
     },
+    [products]
+  );
+
+  const newProducts = useMemo(
+    () => products.filter((p) => p.es_nuevo),
+    [products]
+  );
+
+  const bestSellerProducts = useMemo(
+    () => products.filter((p) => p.es_mas_vendido),
+    [products]
+  );
+
+  const promoProduct = useMemo(
+    () => products.find((p) => p.es_promocion_banner) || null,
     [products]
   );
 
@@ -192,6 +253,9 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
         error,
         refreshCatalog,
         getProductsByPage,
+        newProducts,
+        bestSellerProducts,
+        promoProduct,
         selectedProduct,
         openQuickView,
         closeQuickView,

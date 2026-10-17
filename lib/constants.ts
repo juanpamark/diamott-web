@@ -1,10 +1,10 @@
 export const BRAND = {
   name: "Di'amott",
   domain: "diamott.com",
-  instagramUrl: "https://instagram.com/juanpablohernandezz_?rpxt=MXRjaWU5eGYxMnB3bw%3D%3D&utm_source=qr",
-  officialLogoUrl: "https://res.cloudinary.com/xdjdubsz/image/upload/v1792027702/di_amott_3.png",
+  instagramUrl: "https://www.instagram.com/diamott_beauty?xtok=MXhvdXo0aGFlNGNydw==",
+  officialLogoUrl: "https://res.cloudinary.com/xdjdubsz/image/upload/e_trim/v1792191401/Dise%C3%B1o_sin_t%C3%ADtulo.png",
   fallbackImageUrl: "https://res.cloudinary.com/xdjdubsz/image/upload/v1792027702/di_amott_3.png",
-  heroVideoUrl: "https://res.cloudinary.com/xdjdubsz/video/upload/v1792029359/gemini_generated_video_872ab39f.mp4",
+  heroVideoUrl: "https://res.cloudinary.com/xdjdubsz/video/upload/v1792198504/hero2.mp4",
   whatsappNumber: process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "+573170593785",
   whatsappCheckoutUrl: "https://wa.me/573170593785",
   sheetsCsvUrl:
@@ -21,8 +21,14 @@ export interface Product {
   precioFormateado: string;
   calificacion: number;
   numero_resenas: number;
-  imagen_url: string;
+  imagen_principal_url: string;
+  imagen_secundaria_url?: string;
+  imagen_url: string; // retrocompatibilidad con componentes existentes
+  descripcion_corta?: string;
   disponible: boolean;
+  es_nuevo: boolean;
+  es_mas_vendido: boolean;
+  es_promocion_banner: boolean;
 }
 
 export interface CartItem {
@@ -37,12 +43,18 @@ export interface CheckoutCustomerData {
   metodoPago: "Nequi" | "Daviplata" | "Bancolombia" | string;
 }
 
-export const NAV_LINKS = [
-  { label: "inicio", href: "/" },
+export interface NavLinkItem {
+  label: string;
+  href: string;
+  isDropdown?: boolean;
+}
+
+export const NAV_LINKS: NavLinkItem[] = [
   { label: "maquillaje", href: "/maquillaje" },
-  { label: "bolsos", href: "/bolsos" },
-  { label: "skincare", href: "/skincare" },
-  { label: "accesorios", href: "/accesorios" },
+  { label: "nuevo", href: "/#nuevos" },
+  { label: "más vendidos", href: "/mas-vendidos" },
+  { label: "categorías", href: "#categorias", isDropdown: true },
+  { label: "encargar producto", href: "/#encargar" },
 ];
 
 export const CATEGORIES = [
@@ -61,11 +73,18 @@ export const CATEGORIES = [
     subtitle: "Diseños exclusivos y acabados sofisticados",
   },
   {
-    id: "skincare",
-    name: "Skincare",
-    href: "/skincare",
+    id: "cuidado-facial",
+    name: "Cuidado facial",
+    href: "/cuidado-facial",
     image: "https://images.unsplash.com/photo-1556228720-195a672e8a03?q=80&w=900&auto=format&fit=crop",
     subtitle: "Cuidado facial profesional y luminosidad natural",
+  },
+  {
+    id: "capilar",
+    name: "Capilar",
+    href: "/capilar",
+    image: "https://images.unsplash.com/photo-1527799820374-dcf8d9d4a388?q=80&w=900&auto=format&fit=crop",
+    subtitle: "Cuidado diario y tratamiento intensivo",
   },
   {
     id: "accesorios",

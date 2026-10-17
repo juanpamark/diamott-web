@@ -3,6 +3,7 @@
 interface FilterBarProps {
   activeFilter: string;
   onFilterChange: (filter: string) => void;
+  options?: string[];
 }
 
 export const MAKEUP_FILTERS = [
@@ -12,16 +13,45 @@ export const MAKEUP_FILTERS = [
   "Ojos y cejas",
 ];
 
+export const SKINCARE_FILTERS = [
+  "Todo",
+  "Rostro",
+  "Cuerpo",
+];
+
+export const ACCESSORIES_FILTERS = [
+  "Todo",
+  "Aretes",
+  "Collares",
+  "Accesorios para el cabello",
+];
+
+export const HAIR_FILTERS = [
+  "Todo",
+  "Cuidado diario",
+  "Tratamiento",
+];
+
+export const BEST_SELLERS_FILTERS = [
+  "Todo",
+  "Maquillaje",
+  "Bolsos",
+  "Cuidado facial",
+  "Accesorios",
+  "Capilar",
+];
+
 export default function FilterBar({
   activeFilter,
   onFilterChange,
+  options = MAKEUP_FILTERS,
 }: FilterBarProps) {
   return (
-    <div className="w-full bg-white border-b border-neutral-100 sticky top-[92px] sm:top-[104px] z-30 shadow-2xs">
+    <div className="w-full bg-white border-b border-neutral-100 sticky top-[72px] sm:top-[88px] z-30 shadow-2xs">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-start sm:justify-center overflow-x-auto py-3 gap-2 sm:gap-4 no-scrollbar">
-          {MAKEUP_FILTERS.map((filter) => {
-            const isSelected = activeFilter === filter;
+          {options.map((filter) => {
+            const isSelected = activeFilter.trim().toLowerCase() === filter.trim().toLowerCase();
             return (
               <button
                 key={filter}

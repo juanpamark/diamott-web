@@ -6,7 +6,7 @@ import { Sparkles, Award } from "lucide-react";
 import { useCatalog } from "@/context/CatalogContext";
 
 const DEFAULT_FOUNDER_IMAGE =
-  "https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?q=80&w=900&auto=format&fit=crop";
+  "https://res.cloudinary.com/xdjdubsz/image/upload/v1792197616/WhatsApp_Image_2026-10-15_at_16.43.45_1.jpg";
 
 export default function AboutFounder() {
   const { creatorImageUrl } = useCatalog();

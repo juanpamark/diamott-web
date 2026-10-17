@@ -1,6 +1,8 @@
 "use client";
 
+import { useState } from "react";
 import CategoryHero from "@/components/category/CategoryHero";
+import FilterBar, { ACCESSORIES_FILTERS } from "@/components/category/FilterBar";
 import SpecialOrder from "@/components/shared/SpecialOrder";
 import ProductCard from "@/components/product/ProductCard";
 import { useCatalog } from "@/context/CatalogContext";
@@ -8,7 +10,17 @@ import { Loader2 } from "lucide-react";
 
 export default function AccesoriosPage() {
   const { getProductsByPage, isLoading, error } = useCatalog();
+  const [activeFilter, setActiveFilter] = useState("Todo");
+
   const accesoriosProducts = getProductsByPage("Accesorios");
+
+  // Filtrar según la subcategoría del CSV: Todo, Aretes, Collares, Accesorios para el cabello
+  const filteredProducts =
+    activeFilter === "Todo"
+      ? accesoriosProducts
+      : accesoriosProducts.filter(
+          (item) => item.subcategoria.trim().toLowerCase() === activeFilter.trim().toLowerCase()
+        );
 
   return (
     <div className="w-full">
@@ -18,10 +30,17 @@ export default function AccesoriosPage() {
         imageUrl="https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?q=80&w=1600&auto=format&fit=crop"
       />
 
+      {/* Menú de filtros de Accesorios */}
+      <FilterBar
+        activeFilter={activeFilter}
+        onFilterChange={setActiveFilter}
+        options={ACCESSORIES_FILTERS}
+      />
+
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
         <div className="flex items-center justify-between mb-8">
           <p className="text-xs text-neutral-500 tracking-wider uppercase font-medium">
-            Mostrando {accesoriosProducts.length} productos
+            Mostrando {filteredProducts.length} productos
           </p>
         </div>
 
@@ -38,15 +57,21 @@ export default function AccesoriosPage() {
               No se pudo conectar con el catálogo en este momento.
             </p>
           </div>
-        ) : accesoriosProducts.length === 0 ? (
-          <div className="text-center py-20 bg-neutral-50 rounded-xl">
-            <p className="text-sm text-neutral-500">
-              No hay accesorios disponibles en este momento.
+        ) : filteredProducts.length === 0 ? (
+          <div className="text-center py-16 bg-neutral-50 rounded-xl border border-neutral-100">
+            <p className="text-sm text-neutral-600 font-medium">
+              No hay productos disponibles en esta subcategoría actualmente.
             </p>
+            <button
+              onClick={() => setActiveFilter("Todo")}
+              className="mt-3 text-xs uppercase tracking-wider text-[#B8707A] font-semibold hover:underline cursor-pointer"
+            >
+              Ver todos los accesorios
+            </button>
           </div>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
-            {accesoriosProducts.map((product, index) => (
+            {filteredProducts.map((product, index) => (
               <ProductCard key={product.id} product={product} index={index} />
             ))}
           </div>
