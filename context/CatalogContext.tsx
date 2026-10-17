@@ -2,8 +2,18 @@
 
 import React, { createContext, useContext, useEffect, useState, useCallback, useMemo } from "react";
 import Papa from "papaparse";
-import { BRAND, Product } from "@/lib/constants";
+import { BRAND, Product, HeroConfig } from "@/lib/constants";
 import { formatCurrency } from "@/lib/formatters";
+
+interface RawHeroRow {
+  activo?: string | boolean;
+  tipo_fondo?: string;
+  media_url?: string;
+  titulo?: string;
+  subtitulo?: string;
+  texto_boton?: string;
+  enlace_boton?: string;
+}
 
 interface RawProductRow {
   id?: string;
@@ -32,15 +42,23 @@ interface CatalogContextType {
   newProducts: Product[];
   bestSellerProducts: Product[];
   promoProduct: Product | null;
+  featuredImperdibles: Product[];
   selectedProduct: Product | null;
   openQuickView: (product: Product) => void;
   closeQuickView: () => void;
   creatorImageUrl: string | null;
+  heroConfig: HeroConfig;
 }
 
 const CatalogContext = createContext<CatalogContextType | undefined>(undefined);
 
 export { formatCurrency as formatPrice };
+
+import {
+  normalizeCleanText,
+  parseBooleanFlag,
+  parseAvailability,
+} from "@/lib/catalog-utils";
 
 // Sanitizador básico contra inyección XSS
 function sanitizeText(input: string | undefined): string {
@@ -50,15 +68,20 @@ function sanitizeText(input: string | undefined): string {
     .trim();
 }
 
-function checkBool(val: string | boolean | undefined): boolean {
-  if (typeof val === "boolean") return val;
-  const s = String(val ?? "").trim().toUpperCase();
-  return s === "SÍ" || s === "SI" || s === "TRUE" || s === "1";
-}
+const DEFAULT_HERO_CONFIG: HeroConfig = {
+  activo: true,
+  tipo_fondo: "video",
+  media_url: BRAND.heroVideoUrl,
+  titulo: "Luce tu belleza con estilo propio",
+  subtitulo: "Maquillaje, fragancias y accesorios en tendencia",
+  texto_boton: "Descubre",
+  enlace_boton: "/#imperdibles",
+};
 
 export function CatalogProvider({ children }: { children: React.ReactNode }) {
   const [products, setProducts] = useState<Product[]>([]);
   const [creatorImageUrl, setCreatorImageUrl] = useState<string | null>(null);
+  const [heroConfig, setHeroConfig] = useState<HeroConfig>(DEFAULT_HERO_CONFIG);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -86,8 +109,18 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
 
         Papa.parse<RawProductRow>(csvText, {
           header: true,
-          skipEmptyLines: true,
+          skipEmptyLines: "greedy",
           dynamicTyping: false,
+          // Normalizar encabezados: minúsculas, sin tildes, sin espacios para tolerancia total
+          transformHeader: (header: string) => {
+            return normalizeCleanText(header)
+              .toLowerCase()
+              .replace(/\s+/g, "_");
+          },
+          // Limpiar cada celda de texto
+          transform: (val: string) => {
+            return typeof val === "string" ? val.trim() : val;
+          },
           complete: (results) => {
             if (isCancelled) return;
             try {
@@ -117,14 +150,8 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
                     return false;
                   }
 
-                  const disponibleStr = String(row.disponible ?? "").trim().toUpperCase();
-                  const isAvailable =
-                    disponibleStr === "TRUE" ||
-                    disponibleStr === "1" ||
-                    disponibleStr === "SI" ||
-                    disponibleStr === "SÍ" ||
-                    row.disponible === true;
-                  return isAvailable;
+                  // Tolerancia total a disponibilidad (disponible si SÍ o celda vacía; oculto si NO)
+                  return parseAvailability(row.disponible);
                 })
                 .map((row, index) => {
                   // Precios: descartar decimales si vienen como 35000.00
@@ -133,9 +160,13 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
                   const cleanDigits = withoutDecimals.replace(/[^0-9]/g, "");
                   const numericPrice = parseInt(cleanDigits, 10) || 0;
 
+                  // Calificación flotante (admite 4.8, 5, etc.)
+                  const rawRating = parseFloat(
+                    String(row.calificacion ?? "5").replace(",", ".")
+                  );
                   const numericRating = Math.min(
                     5,
-                    Math.max(1, parseInt(String(row.calificacion ?? "5"), 10) || 5)
+                    Math.max(1, isNaN(rawRating) ? 5 : rawRating)
                   );
 
                   const numericReviews = parseInt(String(row.numero_resenas ?? "0"), 10) || 0;
@@ -167,9 +198,9 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
                     imagen_url: mainImageUrl,
                     descripcion_corta: sanitizeText(row.descripcion_corta),
                     disponible: true,
-                    es_nuevo: checkBool(row.es_nuevo),
-                    es_mas_vendido: checkBool(row.es_mas_vendido),
-                    es_promocion_banner: checkBool(row.es_promocion_banner),
+                    es_nuevo: parseBooleanFlag(row.es_nuevo),
+                    es_mas_vendido: parseBooleanFlag(row.es_mas_vendido),
+                    es_promocion_banner: parseBooleanFlag(row.es_promocion_banner),
                   };
                 });
 
@@ -189,6 +220,72 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
             setIsLoading(false);
           },
         });
+
+        // Cargar configuración de Hero dinámico desde la pestaña correspondiente
+        try {
+          const heroResponse = await fetch(`${BRAND.heroSheetsCsvUrl}&t=${Date.now()}`, {
+            cache: "no-store",
+          });
+          if (heroResponse.ok) {
+            const heroCsvText = await heroResponse.text();
+            if (!isCancelled) {
+              Papa.parse<RawHeroRow>(heroCsvText, {
+                header: true,
+                skipEmptyLines: "greedy",
+                dynamicTyping: false,
+                transformHeader: (header: string) =>
+                  normalizeCleanText(header).toLowerCase().replace(/\s+/g, "_"),
+                transform: (val: string) => (typeof val === "string" ? val.trim() : val),
+                complete: (heroResults) => {
+                  if (isCancelled || !heroResults.data || heroResults.data.length === 0) return;
+
+                  // Buscar la fila que la usuaria haya activado con "SÍ" en la columna 'activo'
+                  const activeRow =
+                    heroResults.data.find(
+                      (row) =>
+                        row &&
+                        parseBooleanFlag(row.activo) &&
+                        Boolean(row.media_url || row.titulo)
+                    ) ||
+                    heroResults.data.find((row) => row && parseBooleanFlag(row.activo)) ||
+                    heroResults.data[0];
+
+                  if (!activeRow) return;
+
+                  const rawMedia = sanitizeText(activeRow.media_url);
+                  const isValidMedia =
+                    (rawMedia.startsWith("http://") || rawMedia.startsWith("https://")) &&
+                    !rawMedia.includes("[PEGAR");
+
+                  const fondoLower = sanitizeText(activeRow.tipo_fondo).toLowerCase();
+                  const isVideo =
+                    fondoLower === "video" ||
+                    rawMedia.endsWith(".mp4") ||
+                    rawMedia.endsWith(".webm") ||
+                    rawMedia.includes("/video/");
+
+                  setHeroConfig({
+                    activo:
+                      activeRow.activo !== undefined
+                        ? parseBooleanFlag(activeRow.activo)
+                        : true,
+                    tipo_fondo: isVideo ? "video" : "imagen",
+                    media_url: isValidMedia ? rawMedia : BRAND.heroVideoUrl,
+                    titulo: sanitizeText(activeRow.titulo) || DEFAULT_HERO_CONFIG.titulo,
+                    subtitulo:
+                      sanitizeText(activeRow.subtitulo) || DEFAULT_HERO_CONFIG.subtitulo,
+                    texto_boton:
+                      sanitizeText(activeRow.texto_boton) || DEFAULT_HERO_CONFIG.texto_boton,
+                    enlace_boton:
+                      sanitizeText(activeRow.enlace_boton) || DEFAULT_HERO_CONFIG.enlace_boton,
+                  });
+                },
+              });
+            }
+          }
+        } catch (heroErr) {
+          console.warn("Aviso: No se pudo cargar el CSV dinámico del hero:", heroErr);
+        }
       } catch (err: unknown) {
         if (isCancelled) return;
         console.error("Error en Client-side fetch del CSV:", err);
@@ -199,31 +296,44 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
 
     loadData();
 
+    // Actualización periódica en segundo plano cada 60 segundos
+    const interval = setInterval(loadData, 60000);
+
     return () => {
       isCancelled = true;
+      clearInterval(interval);
     };
   }, [reloadTrigger]);
 
   const getProductsByPage = useCallback(
     (pageName: string): Product[] => {
-      const target = pageName.trim().toLowerCase();
+      const target = normalizeCleanText(pageName).toLowerCase();
+      const isPersonalCareTarget =
+        target === "cuidado personal" ||
+        target === "cuidado-personal" ||
+        target === "cuidado facial" ||
+        target === "cuidado-facial" ||
+        target === "skincare";
+
       return products.filter((p) => {
-        const pPage = p.pagina.trim().toLowerCase();
+        const pPage = normalizeCleanText(p.pagina).toLowerCase();
         if (pPage === target) return true;
-        if (
-          (target === "cuidado facial" || target === "cuidado-facial" || target === "skincare") &&
-          (pPage === "cuidado facial" || pPage === "skincare")
-        ) {
-          return true;
-        }
+        const isPersonalCarePage =
+          pPage === "cuidado personal" ||
+          pPage === "cuidado-personal" ||
+          pPage === "cuidado facial" ||
+          pPage === "cuidado-facial" ||
+          pPage === "skincare";
+        if (isPersonalCareTarget && isPersonalCarePage) return true;
         return false;
       });
     },
     [products]
   );
 
+  // Los productos nuevos se muestran con los más recientes al principio
   const newProducts = useMemo(
-    () => products.filter((p) => p.es_nuevo),
+    () => [...products].filter((p) => p.es_nuevo).reverse(),
     [products]
   );
 
@@ -232,10 +342,37 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
     [products]
   );
 
+  // La promoción activa selecciona la más recientemente configurada (compatibilidad)
   const promoProduct = useMemo(
-    () => products.find((p) => p.es_promocion_banner) || null,
+    () => [...products].reverse().find((p) => p.es_promocion_banner) || null,
     [products]
   );
+
+  // Los 3 productos de "Los Imperdibles" (seleccionados en Google Sheets con es_promocion_banner)
+  const featuredImperdibles = useMemo(() => {
+    const marked = products.filter((p) => p.es_promocion_banner);
+    if (marked.length >= 3) return marked.slice(0, 3);
+
+    // Si hay menos de 3 marcados, complementar con los más vendidos o nuevos
+    const result = [...marked];
+    const seenIds = new Set(result.map((p) => p.id));
+
+    for (const p of products) {
+      if (result.length >= 3) break;
+      if (!seenIds.has(p.id) && (p.es_mas_vendido || p.es_nuevo)) {
+        result.push(p);
+        seenIds.add(p.id);
+      }
+    }
+    for (const p of products) {
+      if (result.length >= 3) break;
+      if (!seenIds.has(p.id)) {
+        result.push(p);
+        seenIds.add(p.id);
+      }
+    }
+    return result.slice(0, 3);
+  }, [products]);
 
   const openQuickView = useCallback((product: Product) => {
     setSelectedProduct(product);
@@ -256,10 +393,12 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
         newProducts,
         bestSellerProducts,
         promoProduct,
+        featuredImperdibles,
         selectedProduct,
         openQuickView,
         closeQuickView,
         creatorImageUrl,
+        heroConfig,
       }}
     >
       {children}

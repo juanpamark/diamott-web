@@ -14,7 +14,7 @@ export default function BolsosPage() {
     <div className="w-full">
       <CategoryHero
         title="Bolsos"
-        subtitle="Diseños vanguardistas y acabados premium diseñados para acompañar tu ritmo y destacar tu look."
+        subtitle="Diseños versátiles y excelente calidad pensados para acompañar tu ritmo y destacar tu look."
         imageUrl="https://images.unsplash.com/photo-1584917865442-de89df76afd3?q=80&w=1600&auto=format&fit=crop"
       />
 

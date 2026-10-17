@@ -112,26 +112,26 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       const productLines = items
         .map(
           (item) =>
-            `• ${item.quantity}x ${item.product.nombre_producto} (${item.product.pagina}${
+            `- ${item.quantity}x ${item.product.nombre_producto} (${item.product.pagina}${
               item.product.subcategoria ? ` - ${item.product.subcategoria}` : ""
-            }) - ${formatCurrency(item.product.precio * item.quantity)}`
+            }) -> ${formatCurrency(item.product.precio * item.quantity)}`
         )
         .join("\n");
 
-      const message = `✨ *NUEVO PEDIDO - DI'AMOTT* ✨
+      const message = `✨ *NUEVO PEDIDO - DI'AMOTT*
 
 🛍️ *Productos solicitados:*
 ${productLines}
 
-💰 *Subtotal General:* ${formatCurrency(subtotal)}
+💰 *Total a pagar:* ${formatCurrency(subtotal)}
 
-👤 *Datos de Envío:*
-• *Nombre:* ${customerData.nombre.trim()}
-• *Cédula:* ${customerData.cedula.trim()}
-• *Dirección / Ciudad:* ${customerData.direccionCiudad.trim()}
-• *Método de pago preferido:* ${customerData.metodoPago}
+📍 *Datos de entrega:*
+- Nombre: ${customerData.nombre.trim()}
+- Cedula: ${customerData.cedula.trim()}
+- Direccion / Ciudad: ${customerData.direccionCiudad.trim()}
+- Metodo de pago: ${customerData.metodoPago}
 
-¡Hola Di'amott! Deseo confirmar la disponibilidad y los datos para realizar el pago de mi pedido.`;
+Hola Di'amott, deseo confirmar la disponibilidad de estos productos para realizar el pago de mi pedido.`;
 
       const encodedMessage = encodeURIComponent(message);
       const url = `https://wa.me/573170593785?text=${encodedMessage}`;

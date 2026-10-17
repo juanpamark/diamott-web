@@ -8,6 +8,8 @@ import ProductCard from "@/components/product/ProductCard";
 import { useCatalog } from "@/context/CatalogContext";
 import { Loader2 } from "lucide-react";
 
+import { matchesSubcategory } from "@/lib/catalog-utils";
+
 export default function CapilarPage() {
   const { getProductsByPage, isLoading, error } = useCatalog();
   const [activeFilter, setActiveFilter] = useState("Todo");
@@ -19,9 +21,7 @@ export default function CapilarPage() {
   const filteredProducts =
     activeFilter === "Todo"
       ? hairProducts
-      : hairProducts.filter(
-          (item) => item.subcategoria.trim().toLowerCase() === activeFilter.trim().toLowerCase()
-        );
+      : hairProducts.filter((item) => matchesSubcategory(item.subcategoria, activeFilter));
 
   return (
     <div className="w-full">

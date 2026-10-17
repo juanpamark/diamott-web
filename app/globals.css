@@ -54,3 +54,12 @@ body {
 .animate-marquee-slow:hover {
   animation-play-state: paused;
 }
+
+/* Ocultar barra de scroll en filtros móviles (mantiene scroll por toque) */
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}

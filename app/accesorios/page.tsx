@@ -8,6 +8,8 @@ import ProductCard from "@/components/product/ProductCard";
 import { useCatalog } from "@/context/CatalogContext";
 import { Loader2 } from "lucide-react";
 
+import { matchesSubcategory } from "@/lib/catalog-utils";
+
 export default function AccesoriosPage() {
   const { getProductsByPage, isLoading, error } = useCatalog();
   const [activeFilter, setActiveFilter] = useState("Todo");
@@ -18,9 +20,7 @@ export default function AccesoriosPage() {
   const filteredProducts =
     activeFilter === "Todo"
       ? accesoriosProducts
-      : accesoriosProducts.filter(
-          (item) => item.subcategoria.trim().toLowerCase() === activeFilter.trim().toLowerCase()
-        );
+      : accesoriosProducts.filter((item) => matchesSubcategory(item.subcategoria, activeFilter));
 
   return (
     <div className="w-full">

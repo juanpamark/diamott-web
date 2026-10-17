@@ -16,7 +16,7 @@ export default function Footer() {
               BEAUTY AND ACCESSORIES
             </span>
             <p className="text-xs text-neutral-500 max-w-xs leading-relaxed font-light pt-2">
-              Alta gama en belleza, cosméticos, cuidado facial y accesorios de estilo. Eleva tu belleza con la curaduría exclusiva de Jennifer Motato.
+              Cosméticos de excelente calidad, cuidado personal, fragancias y accesorios. Resalta tu belleza con la curaduría de Jeniffer Motato.
             </p>
           </div>
 

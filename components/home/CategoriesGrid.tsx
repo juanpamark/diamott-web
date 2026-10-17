@@ -17,12 +17,12 @@ export default function CategoriesGrid() {
           Compra por categoría
         </h2>
         <p className="text-xs sm:text-sm text-neutral-500 mt-3 font-light max-w-md mx-auto">
-          Explora los esenciales de belleza seleccionados para elevar tu rutina diaria con estética de pasarela.
+          Explora nuestras colecciones seleccionadas para complementar tu rutina diaria con fórmulas efectivas y estilo propio.
         </p>
       </div>
 
-      {/* Cuadrícula Imponente: 2 columnas en móvil, 3 en tablet y 5 en escritorio */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-5 lg:gap-6 w-full">
+      {/* Cuadrícula Balanceada: 2 columnas en móvil, 3 en tablet y escritorio (2 filas de 3) */}
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-5 lg:gap-6 w-full">
         {CATEGORIES.map((category) => (
           <Link
             key={category.id}

@@ -10,8 +10,9 @@ export default function NewArrivalsSection() {
   const { newProducts, products } = useCatalog();
   const [viewMode, setViewMode] = useState<"carousel" | "grid">("carousel");
 
-  // Si no hay productos marcados como es_nuevo == SÍ, tomamos los primeros 6 como respaldo
-  const displayProducts = newProducts.length > 0 ? newProducts : products.slice(0, 6);
+  // Si no hay productos marcados como es_nuevo == SÍ, tomamos los últimos añadidos al catálogo como respaldo
+  const displayProducts =
+    newProducts.length > 0 ? newProducts : [...products].reverse().slice(0, 8);
 
   // Duplicar elementos para efecto infinito continuo si estamos en carrusel
   const carouselItems =
@@ -102,7 +103,7 @@ export default function NewArrivalsSection() {
               </button>
 
               <Link
-                href="/maquillaje"
+                href="/#categorias"
                 className="px-6 py-2.5 bg-neutral-900 hover:bg-black text-white text-xs tracking-widest uppercase font-semibold rounded-sm flex items-center gap-2 shadow-md transition-all"
               >
                 <span>Ver más</span>

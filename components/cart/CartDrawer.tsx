@@ -137,7 +137,11 @@ export default function CartDrawer() {
                       {/* Imagen con fallback */}
                       <div className="relative w-20 h-20 aspect-square rounded-sm overflow-hidden bg-neutral-50 shrink-0 border border-neutral-100">
                         <Image
-                          src={item.product.imagen_url || BRAND.fallbackImageUrl}
+                          src={
+                            item.product.imagen_principal_url ||
+                            item.product.imagen_url ||
+                            BRAND.fallbackImageUrl
+                          }
                           alt={item.product.nombre_producto}
                           fill
                           sizes="80px"
@@ -237,7 +241,7 @@ export default function CartDrawer() {
                         setFormData({ ...formData, nombre: e.target.value });
                         if (formErrors.nombre) setFormErrors({ ...formErrors, nombre: "" });
                       }}
-                      placeholder="Ej. Jennifer Motato"
+                      placeholder="Ej. Jeniffer Motato"
                       className="w-full px-3 py-2 text-xs bg-neutral-50 border border-neutral-200 rounded-sm text-neutral-900 focus:outline-none focus:ring-1 focus:ring-neutral-900 focus:bg-white"
                     />
                     {formErrors.nombre && (

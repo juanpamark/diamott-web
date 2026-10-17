@@ -7,6 +7,7 @@ import { CatalogProvider } from "@/context/CatalogContext";
 import { CartProvider } from "@/context/CartContext";
 import ProductQuickViewModal from "@/components/product/ProductQuickViewModal";
 import CartDrawer from "@/components/cart/CartDrawer";
+import WhatsAppFloatingButton from "@/components/shared/WhatsAppFloatingButton";
 
 const montserrat = Montserrat({
   subsets: ["latin"],
@@ -29,28 +30,43 @@ export const metadata: Metadata = {
     template: "%s | Di'amott",
   },
   description:
-    "E-commerce exclusivo de cosméticos premium, maquillaje de alta definición, skincare y accesorios de estilo. Calidad de estudio profesional y atención personalizada por WhatsApp.",
+    "Cosméticos de excelente calidad, maquillaje, cuidado personal, fragancias y accesorios de estilo. Atención personalizada y envíos a todo el país.",
   keywords: [
     "Di'amott",
-    "maquillaje premium",
-    "cosméticos de alta gama",
-    "skincare profesional",
+    "maquillaje",
+    "cuidado personal",
+    "fragancias",
     "bolsos",
     "accesorios",
-    "Jennifer Motato",
+    "Jeniffer Motato",
     "beauty and accessories",
   ],
-  authors: [{ name: "Jennifer Motato" }, { name: "Juan Pablo Hernández" }],
+  authors: [{ name: "Jeniffer Motato" }, { name: "Juan Pablo Hernández" }],
   creator: "Di'amott",
+  icons: {
+    icon: [
+      {
+        url: "https://res.cloudinary.com/xdjdubsz/image/upload/e_trim/v1792191401/Dise%C3%B1o_sin_t%C3%ADtulo.png",
+        sizes: "any",
+      },
+    ],
+    apple: [
+      {
+        url: "https://res.cloudinary.com/xdjdubsz/image/upload/e_trim/v1792191401/Dise%C3%B1o_sin_t%C3%ADtulo.png",
+        sizes: "180x180",
+      },
+    ],
+    shortcut: "https://res.cloudinary.com/xdjdubsz/image/upload/e_trim/v1792191401/Dise%C3%B1o_sin_t%C3%ADtulo.png",
+  },
   openGraph: {
     title: "Di'amott | Beauty and Accessories",
     description:
-      "E-commerce exclusivo de cosméticos premium, maquillaje de alta definición, skincare y accesorios de estilo. Calidad de estudio profesional.",
+      "Cosméticos de excelente calidad, maquillaje, cuidado personal, fragancias y accesorios de estilo.",
     url: "https://diamott.com",
     siteName: "Di'amott",
     images: [
       {
-        url: "https://res.cloudinary.com/xdjdubsz/image/upload/v1792027702/di_amott_3.png",
+        url: "https://res.cloudinary.com/xdjdubsz/image/upload/e_trim/v1792191401/Dise%C3%B1o_sin_t%C3%ADtulo.png",
         width: 800,
         height: 800,
         alt: "Di'amott Logo",
@@ -63,9 +79,9 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Di'amott | Beauty and Accessories",
     description:
-      "E-commerce exclusivo de cosméticos premium, maquillaje de alta definición, skincare y accesorios de estilo.",
+      "Cosméticos de excelente calidad, maquillaje, cuidado personal, fragancias y accesorios de estilo.",
     images: [
-      "https://res.cloudinary.com/xdjdubsz/image/upload/v1792027702/di_amott_3.png",
+      "https://res.cloudinary.com/xdjdubsz/image/upload/e_trim/v1792191401/Dise%C3%B1o_sin_t%C3%ADtulo.png",
     ],
   },
   robots: {
@@ -82,6 +98,7 @@ export default function RootLayout({
   return (
     <html
       lang="es"
+      data-scroll-behavior="smooth"
       className={`${montserrat.variable} ${playfair.variable} scroll-smooth`}
     >
       <body className="min-h-screen flex flex-col bg-white text-[#1C1C1C] font-sans antialiased selection:bg-[#E8C5C8] selection:text-neutral-900">
@@ -92,6 +109,7 @@ export default function RootLayout({
             <Footer />
             <ProductQuickViewModal />
             <CartDrawer />
+            <WhatsAppFloatingButton />
           </CartProvider>
         </CatalogProvider>
       </body>

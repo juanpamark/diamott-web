@@ -10,7 +10,20 @@ export const BRAND = {
   sheetsCsvUrl:
     process.env.NEXT_PUBLIC_SHEETS_CSV_URL ||
     "https://docs.google.com/spreadsheets/d/e/2PACX-1vQm6VelNXSvA07xJ_p4nYWfc_GHHpBtKuE7UfiQAJCbBWrCYiLVdC49V9e9n0zb6ULapqOrTuP4b9AZ/pub?output=csv",
+  heroSheetsCsvUrl:
+    process.env.NEXT_PUBLIC_SHEETS_HERO_CSV_URL ||
+    "https://docs.google.com/spreadsheets/d/e/2PACX-1vQm6VelNXSvA07xJ_p4nYWfc_GHHpBtKuE7UfiQAJCbBWrCYiLVdC49V9e9n0zb6ULapqOrTuP4b9AZ/pub?gid=95694404&single=true&output=csv",
 };
+
+export interface HeroConfig {
+  activo: boolean;
+  tipo_fondo: "video" | "imagen";
+  media_url: string;
+  titulo: string;
+  subtitulo: string;
+  texto_boton: string;
+  enlace_boton: string;
+}
 
 export interface Product {
   id: string;
@@ -53,7 +66,7 @@ export const NAV_LINKS: NavLinkItem[] = [
   { label: "maquillaje", href: "/maquillaje" },
   { label: "nuevo", href: "/#nuevos" },
   { label: "más vendidos", href: "/mas-vendidos" },
-  { label: "categorías", href: "#categorias", isDropdown: true },
+  { label: "categorías", href: "/#categorias", isDropdown: true },
   { label: "encargar producto", href: "/#encargar" },
 ];
 
@@ -63,34 +76,41 @@ export const CATEGORIES = [
     name: "Maquillaje",
     href: "/maquillaje",
     image: "https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?q=80&w=900&auto=format&fit=crop",
-    subtitle: "Rostro, labios, ojos y cejas de alta definición",
+    subtitle: "Rostro, labios, ojos y cejas con acabados profesionales",
   },
   {
     id: "bolsos",
     name: "Bolsos",
     href: "/bolsos",
     image: "https://images.unsplash.com/photo-1584917865442-de89df76afd3?q=80&w=900&auto=format&fit=crop",
-    subtitle: "Diseños exclusivos y acabados sofisticados",
+    subtitle: "Diseños versátiles, estilo y acabados modernos",
   },
   {
-    id: "cuidado-facial",
-    name: "Cuidado facial",
-    href: "/cuidado-facial",
+    id: "cuidado-personal",
+    name: "Cuidado personal",
+    href: "/cuidado-personal",
     image: "https://images.unsplash.com/photo-1556228720-195a672e8a03?q=80&w=900&auto=format&fit=crop",
-    subtitle: "Cuidado facial profesional y luminosidad natural",
+    subtitle: "Fórmulas hidratantes para rostro y cuerpo",
   },
   {
     id: "capilar",
     name: "Capilar",
     href: "/capilar",
     image: "https://images.unsplash.com/photo-1527799820374-dcf8d9d4a388?q=80&w=900&auto=format&fit=crop",
-    subtitle: "Cuidado diario y tratamiento intensivo",
+    subtitle: "Cuidado diario y nutrición profunda",
   },
   {
     id: "accesorios",
     name: "Accesorios",
     href: "/accesorios",
     image: "https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?q=80&w=900&auto=format&fit=crop",
-    subtitle: "Detalles que transforman y completan tu estilo",
+    subtitle: "Detalles que transforman y completan tu look",
+  },
+  {
+    id: "fragancias",
+    name: "Fragancias",
+    href: "/fragancias",
+    image: "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?q=80&w=900&auto=format&fit=crop",
+    subtitle: "Splash corporales, aromas frescos y notas envolventes",
   },
 ];

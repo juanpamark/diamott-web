@@ -8,6 +8,8 @@ import ProductCard from "@/components/product/ProductCard";
 import { useCatalog } from "@/context/CatalogContext";
 import { Loader2 } from "lucide-react";
 
+import { matchesSubcategory } from "@/lib/catalog-utils";
+
 export default function MaquillajePage() {
   const { getProductsByPage, isLoading, error } = useCatalog();
   const [activeFilter, setActiveFilter] = useState("Todo");
@@ -19,9 +21,7 @@ export default function MaquillajePage() {
   const filteredProducts =
     activeFilter === "Todo"
       ? makeupProducts
-      : makeupProducts.filter(
-          (item) => item.subcategoria.trim().toLowerCase() === activeFilter.trim().toLowerCase()
-        );
+      : makeupProducts.filter((item) => matchesSubcategory(item.subcategoria, activeFilter));
 
   return (
     <div className="w-full">

@@ -22,7 +22,7 @@ export default function AboutFounder() {
           <div className="relative aspect-[4/5] max-w-sm mx-auto md:max-w-none w-full rounded-2xl overflow-hidden shadow-lg border border-neutral-200/60">
             <Image
               src={imgSrc}
-              alt="Jennifer Motato - Fundadora de Di'amott"
+              alt="Jeniffer Motato - Fundadora de Di'amott"
               fill
               sizes="(max-width: 768px) 100vw, 50vw"
               className="object-cover"
@@ -33,7 +33,7 @@ export default function AboutFounder() {
               <span className="text-[10px] tracking-[0.2em] uppercase font-semibold text-[#E8C5C8]">
                 Fundadora & Makeup Artist
               </span>
-              <p className="text-base font-medium">Jennifer Motato</p>
+              <p className="text-base font-medium">Jeniffer Motato</p>
             </div>
           </div>
 
@@ -50,11 +50,11 @@ export default function AboutFounder() {
 
             <p className="text-xs sm:text-sm text-neutral-600 leading-relaxed font-light">
               Detrás de <strong className="font-semibold text-neutral-900">Di&apos;amott</strong> se encuentra{" "}
-              <strong className="font-semibold text-neutral-900">Jennifer Motato</strong>, una apasionada de la belleza y futura maquilladora profesional, cuya misión es acercar productos de alta gama y técnicas de estudio a tu rutina diaria.
+              <strong className="font-semibold text-neutral-900">Jeniffer Motato</strong>, una apasionada de la belleza y futura maquilladora profesional, cuya misión es acercar productos de excelente calidad, fórmulas confiables y técnicas prácticas a tu rutina diaria.
             </p>
 
             <p className="text-xs sm:text-sm text-neutral-600 leading-relaxed font-light">
-              Cada cosmético, bolso y accesorio de nuestro catálogo pasa por un riguroso criterio de selección: calidad superior, estética impecable y resultados que te hacen sentir segura, empoderada y radiante en cada momento especial.
+              Cada cosmético, bolso, fragancia y accesorio de nuestro catálogo pasa por un riguroso criterio de selección: calidad comprobada, estética impecable y precios accesibles que te hacen sentir segura, radiante y auténtica en cada momento.
             </p>
 
             <div className="pt-2 flex items-center justify-center md:justify-start gap-6 text-xs text-neutral-500">

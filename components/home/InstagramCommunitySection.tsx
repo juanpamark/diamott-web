@@ -18,7 +18,7 @@ export default function InstagramCommunitySection() {
     {
       icon: Heart,
       title: "Tips & Masterclasses",
-      desc: "Aprende técnicas profesionales, combinaciones de tonos y rutinas de skincare impartidas por Jennifer Motato.",
+      desc: "Aprende técnicas profesionales, combinaciones de tonos y rutinas de cuidado personal impartidas por Jeniffer Motato.",
     },
   ];
 

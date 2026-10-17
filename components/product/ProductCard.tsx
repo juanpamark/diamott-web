@@ -9,29 +9,27 @@ import { useCart } from "@/context/CartContext";
 
 interface ProductCardProps {
   product: Product;
-  index: number;
+  index?: number;
 }
 
-export default function ProductCard({ product, index }: ProductCardProps) {
+export default function ProductCard({ product }: ProductCardProps) {
   const { openQuickView } = useCatalog();
   const { addToCart } = useCart();
-  const [imgSrc, setImgSrc] = useState(
-    product.imagen_principal_url || product.imagen_url || BRAND.fallbackImageUrl
-  );
   const [hasError, setHasError] = useState(false);
   const [justAdded, setJustAdded] = useState(false);
 
-  // Badge NUEVO: marcado como es_nuevo en el CSV, o primeros índices de cuadrícula
-  const isNew = product.es_nuevo || index === 0 || index === 1;
+  // Imagen directa y reactiva ante cambios del catálogo
+  const rawImg = product.imagen_principal_url || product.imagen_url || BRAND.fallbackImageUrl;
+  const imgSrc = hasError ? BRAND.fallbackImageUrl : rawImg;
+
+  // Badge NUEVO: determinado exclusivamente por el campo es_nuevo del CSV (Google Sheets)
+  const isNew = product.es_nuevo;
 
   // Calificación en formato decimal (ej: 5.0, 4.8)
   const ratingFormatted = Number(product.calificacion || 5).toFixed(1);
 
   const handleImageError = () => {
-    if (!hasError) {
-      setHasError(true);
-      setImgSrc(BRAND.fallbackImageUrl);
-    }
+    setHasError(true);
   };
 
   const handleQuickAdd = (e: React.MouseEvent) => {

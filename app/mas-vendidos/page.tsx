@@ -7,6 +7,7 @@ import SpecialOrder from "@/components/shared/SpecialOrder";
 import ProductCard from "@/components/product/ProductCard";
 import { useCatalog } from "@/context/CatalogContext";
 import { Loader2, Flame } from "lucide-react";
+import { normalizeCleanText } from "@/lib/catalog-utils";
 
 export default function MasVendidosPage() {
   const { bestSellerProducts, isLoading, error } = useCatalog();
@@ -17,15 +18,23 @@ export default function MasVendidosPage() {
     activeFilter === "Todo"
       ? bestSellerProducts
       : bestSellerProducts.filter((item) => {
-          const itemCat = item.pagina.trim().toLowerCase();
-          const target = activeFilter.trim().toLowerCase();
+          const itemCat = normalizeCleanText(item.pagina).toLowerCase();
+          const target = normalizeCleanText(activeFilter).toLowerCase();
           if (itemCat === target) return true;
-          if (
-            (target === "cuidado facial" || target === "cuidado-facial") &&
-            (itemCat === "cuidado facial" || itemCat === "skincare")
-          ) {
-            return true;
-          }
+          // Alias: admitir "cuidado personal", "cuidado facial" y "skincare" como equivalentes
+          const isPersonalCareTarget =
+            target === "cuidado personal" ||
+            target === "cuidado-personal" ||
+            target === "cuidado facial" ||
+            target === "cuidado-facial" ||
+            target === "skincare";
+          const isPersonalCareItem =
+            itemCat === "cuidado personal" ||
+            itemCat === "cuidado-personal" ||
+            itemCat === "cuidado facial" ||
+            itemCat === "cuidado-facial" ||
+            itemCat === "skincare";
+          if (isPersonalCareTarget && isPersonalCareItem) return true;
           return false;
         });
 

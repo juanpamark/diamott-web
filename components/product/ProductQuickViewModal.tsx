@@ -58,8 +58,7 @@ function ProductQuickViewContent({ product, onClose }: ContentProps) {
     setAddedFeedback(true);
     setTimeout(() => {
       setAddedFeedback(false);
-      onClose();
-    }, 600);
+    }, 1200);
   };
 
   return (

@@ -16,13 +16,13 @@ export default function HomePage() {
       {/* Sección 2: Cinta Morada / Marquee con todas las categorías */}
       <MarqueeTicker />
 
-      {/* Sección 3: Banner de Promoción Dinámica desde Google Sheets */}
+      {/* Sección 3: Los Imperdibles (3 destacados en PC / Rotación 5s en Móvil) */}
       <PromoBannerSection />
 
       {/* Sección 4: Nuevos Lanzamientos (Carrusel Infinito / Cuadrícula) */}
       <NewArrivalsSection />
 
-      {/* Sección 5: Compra por Categoría (5 colecciones oficiales) */}
+      {/* Sección 5: Compra por Categoría (6 colecciones oficiales) */}
       <CategoriesGrid />
 
       {/* Sección 6: Encarga tu Producto (con nueva imagen y formulario) */}
@@ -31,7 +31,7 @@ export default function HomePage() {
       {/* Sección 7: Comunidad VIP en Instagram (@diamott_beauty) */}
       <InstagramCommunitySection />
 
-      {/* Sección 8: Conoce a la Creadora (Jennifer Motato) */}
+      {/* Sección 8: Conoce a la Creadora (Jeniffer Motato) */}
       <AboutFounder />
     </div>
   );

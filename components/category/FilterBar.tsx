@@ -11,13 +11,17 @@ export const MAKEUP_FILTERS = [
   "Rostro",
   "Labios",
   "Ojos y cejas",
+  "Corporal",
 ];
 
-export const SKINCARE_FILTERS = [
+export const PERSONAL_CARE_FILTERS = [
   "Todo",
   "Rostro",
   "Cuerpo",
 ];
+
+// Alias para retrocompatibilidad
+export const SKINCARE_FILTERS = PERSONAL_CARE_FILTERS;
 
 export const ACCESSORIES_FILTERS = [
   "Todo",
@@ -36,9 +40,10 @@ export const BEST_SELLERS_FILTERS = [
   "Todo",
   "Maquillaje",
   "Bolsos",
-  "Cuidado facial",
+  "Cuidado personal",
   "Accesorios",
   "Capilar",
+  "Fragancias",
 ];
 
 export default function FilterBar({
