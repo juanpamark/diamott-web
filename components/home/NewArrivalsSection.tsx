@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { Sparkles, LayoutGrid, RotateCcw, ArrowRight } from "lucide-react";
 import { useCatalog } from "@/context/CatalogContext";
 import ProductCard from "@/components/product/ProductCard";
@@ -9,10 +8,13 @@ import ProductCard from "@/components/product/ProductCard";
 export default function NewArrivalsSection() {
   const { newProducts, products } = useCatalog();
   const [viewMode, setViewMode] = useState<"carousel" | "grid">("carousel");
+  const [visibleCount, setVisibleCount] = useState(4);
 
   // Si no hay productos marcados como es_nuevo == SÍ, tomamos los últimos añadidos al catálogo como respaldo
   const displayProducts =
     newProducts.length > 0 ? newProducts : [...products].reverse().slice(0, 8);
+
+  const hasMore = visibleCount < displayProducts.length;
 
   // Duplicar elementos para efecto infinito continuo si estamos en carrusel
   const carouselItems =
@@ -60,22 +62,18 @@ export default function NewArrivalsSection() {
           </div>
         )}
 
-        {/* Modo 2: Cuadrícula Estática (Muestra 8 en PC y 4 en Móvil) */}
+        {/* Modo 2: Cuadrícula Progresiva (Inicial 4, carga de 4 en 4 sin saltos) */}
         {viewMode === "grid" && (
           <div className="w-full animate-in fade-in zoom-in-98 duration-300">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
-              {displayProducts.slice(0, 8).map((product, idx) => {
-                // En móvil sólo mostramos hasta 4 productos; del 4 al 7 quedan ocultos en pantallas pequeñas
-                const isHiddenOnMobile = idx >= 4;
-                return (
-                  <div
-                    key={`${product.id}-grid-${idx}`}
-                    className={isHiddenOnMobile ? "hidden md:block" : "block"}
-                  >
-                    <ProductCard product={product} index={idx} />
-                  </div>
-                );
-              })}
+              {displayProducts.slice(0, visibleCount).map((product, idx) => (
+                <div
+                  key={`${product.id}-grid-${idx}`}
+                  className="animate-in fade-in duration-300"
+                >
+                  <ProductCard product={product} index={idx} />
+                </div>
+              ))}
             </div>
           </div>
         )}
@@ -85,7 +83,10 @@ export default function NewArrivalsSection() {
           {viewMode === "carousel" ? (
             <button
               type="button"
-              onClick={() => setViewMode("grid")}
+              onClick={() => {
+                setViewMode("grid");
+                setVisibleCount(4);
+              }}
               className="px-6 py-3 bg-neutral-900 hover:bg-black text-white text-xs tracking-widest uppercase font-semibold rounded-sm flex items-center gap-2 shadow-md hover:shadow-lg transition-all active:scale-95 cursor-pointer"
             >
               <LayoutGrid className="w-4 h-4 text-[#E8C5C8]" />
@@ -95,20 +96,27 @@ export default function NewArrivalsSection() {
             <div className="flex flex-wrap items-center justify-center gap-3">
               <button
                 type="button"
-                onClick={() => setViewMode("carousel")}
+                onClick={() => {
+                  setViewMode("carousel");
+                  setVisibleCount(4);
+                }}
                 className="px-5 py-2.5 bg-white border border-neutral-300 text-neutral-800 hover:text-black hover:border-neutral-900 text-xs tracking-widest uppercase font-semibold rounded-sm flex items-center gap-2 shadow-2xs transition-all cursor-pointer"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
                 <span>Volver a carrusel</span>
               </button>
 
-              <Link
-                href="/#categorias"
-                className="px-6 py-2.5 bg-neutral-900 hover:bg-black text-white text-xs tracking-widest uppercase font-semibold rounded-sm flex items-center gap-2 shadow-md transition-all"
-              >
-                <span>Ver más</span>
-                <ArrowRight className="w-3.5 h-3.5 text-[#E8C5C8]" />
-              </Link>
+              {/* Botón Ver Más: solo se muestra si faltan productos por desplegar */}
+              {hasMore && (
+                <button
+                  type="button"
+                  onClick={() => setVisibleCount((prev) => prev + 4)}
+                  className="px-6 py-2.5 bg-neutral-900 hover:bg-black text-white text-xs tracking-widest uppercase font-semibold rounded-sm flex items-center gap-2 shadow-md hover:shadow-lg transition-all active:scale-95 cursor-pointer"
+                >
+                  <span>Ver más</span>
+                  <ArrowRight className="w-3.5 h-3.5 text-[#E8C5C8]" />
+                </button>
+              )}
             </div>
           )}
         </div>

@@ -6,6 +6,7 @@ import { X, Plus, Minus, Trash2, ShoppingBag, ArrowRight, ShieldCheck } from "lu
 import { useCart } from "@/context/CartContext";
 import { BRAND, CheckoutCustomerData } from "@/lib/constants";
 import { formatCurrency } from "@/lib/formatters";
+import TermsModal from "@/components/layout/TermsModal";
 
 const PAYMENT_METHODS = ["Nequi", "Daviplata", "Bancolombia"];
 
@@ -26,6 +27,7 @@ export default function CartDrawer() {
     direccionCiudad: "",
     metodoPago: "Nequi",
   });
+  const [isTermsOpen, setIsTermsOpen] = useState(false);
 
   // Bloquear scroll de la página cuando el Drawer esté abierto
   useEffect(() => {
@@ -276,6 +278,21 @@ export default function CartDrawer() {
           {/* Pie del Drawer: Botón WhatsApp Checkout */}
           {items.length > 0 && (
             <div className="p-4 sm:p-6 border-t border-neutral-100 bg-white">
+              {/* Enlace sutil previo a Términos y Condiciones */}
+              <div className="mb-3 text-center">
+                <p className="text-[11px] text-neutral-500 font-light leading-relaxed">
+                  Al enviar tu pedido confirmas que aceptas nuestros{" "}
+                  <button
+                    type="button"
+                    onClick={() => setIsTermsOpen(true)}
+                    className="underline underline-offset-2 text-neutral-900 hover:text-black font-medium cursor-pointer transition-colors"
+                  >
+                    Términos, Condiciones y Política de Privacidad
+                  </button>
+                  .
+                </p>
+              </div>
+
               <button
                 type="submit"
                 form="checkout-form"
@@ -291,6 +308,8 @@ export default function CartDrawer() {
           )}
         </div>
       </div>
+
+      <TermsModal isOpen={isTermsOpen} onClose={() => setIsTermsOpen(false)} />
     </div>
   );
 }

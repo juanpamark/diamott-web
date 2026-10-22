@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState } from "react";
 import Image from "next/image";
-import { Sparkles, ShoppingBag, Eye, Check, ChevronLeft, ChevronRight, LayoutGrid, RotateCcw } from "lucide-react";
+import { Sparkles, ShoppingBag, Eye, Check, LayoutGrid, RotateCcw, ArrowRight } from "lucide-react";
 import { useCatalog } from "@/context/CatalogContext";
 import { useCart } from "@/context/CartContext";
 import { BRAND, Product } from "@/lib/constants";
@@ -11,8 +11,8 @@ export default function PromoBannerSection() {
   const { featuredImperdibles, openQuickView } = useCatalog();
   const { addToCart } = useCart();
   const [viewMode, setViewMode] = useState<"carousel" | "grid">("carousel");
+  const [visibleCount, setVisibleCount] = useState(4);
   const [addedIds, setAddedIds] = useState<{ [id: string]: boolean }>({});
-  const carouselRef = useRef<HTMLDivElement>(null);
 
   if (featuredImperdibles.length === 0) return null;
 
@@ -25,17 +25,13 @@ export default function PromoBannerSection() {
     }, 1200);
   };
 
-  const scrollLeft = () => {
-    if (carouselRef.current) {
-      carouselRef.current.scrollBy({ left: -300, behavior: "smooth" });
-    }
-  };
+  const hasMore = visibleCount < featuredImperdibles.length;
 
-  const scrollRight = () => {
-    if (carouselRef.current) {
-      carouselRef.current.scrollBy({ left: 300, behavior: "smooth" });
-    }
-  };
+  // Duplicar elementos para efecto infinito continuo igual que Nuevos
+  const carouselItems =
+    featuredImperdibles.length > 0
+      ? [...featuredImperdibles, ...featuredImperdibles, ...featuredImperdibles]
+      : [];
 
   return (
     <section
@@ -62,25 +58,21 @@ export default function PromoBannerSection() {
         </div>
 
         {/* ============================================================ */}
-        {/* MODO 1: CARRUSEL DESLIZABLE FLUIDO (CON TOUCH-SWIPE SUAVE)   */}
+        {/* MODO 1: CARRUSEL EN MOVIMIENTO CONTINUO (IGUAL QUE NUEVOS)   */}
         {/* ============================================================ */}
         {viewMode === "carousel" && (
-          <div className="relative w-full group/carousel">
-            {/* Contenedor con scroll táctil suave y snap */}
-            <div
-              ref={carouselRef}
-              className="flex gap-4 sm:gap-6 overflow-x-auto no-scrollbar scroll-smooth py-2 px-1 snap-x snap-mandatory"
-            >
-              {featuredImperdibles.map((product) => {
+          <div className="relative w-full overflow-hidden">
+            <div className="flex gap-4 sm:gap-6 w-max animate-marquee-slow hover:[animation-play-state:paused] py-2">
+              {carouselItems.map((product, idx) => {
                 const imgSrc =
                   product.imagen_principal_url || product.imagen_url || BRAND.fallbackImageUrl;
                 const isJustAdded = !!addedIds[product.id];
 
                 return (
                   <div
-                    key={`imperdible-${product.id}`}
+                    key={`imperdible-carousel-${product.id}-${idx}`}
                     onClick={() => openQuickView(product)}
-                    className="w-64 sm:w-72 shrink-0 snap-start flex flex-col bg-neutral-900/90 rounded-2xl border border-neutral-800 hover:border-neutral-700 overflow-hidden shadow-xl transition-all duration-300 group cursor-pointer"
+                    className="w-64 sm:w-72 shrink-0 flex flex-col bg-neutral-900/90 rounded-2xl border border-neutral-800 hover:border-neutral-700 overflow-hidden shadow-xl transition-all duration-300 group cursor-pointer"
                   >
                     {/* Imagen del producto */}
                     <div className="relative aspect-square w-full overflow-hidden bg-neutral-950">
@@ -126,7 +118,6 @@ export default function PromoBannerSection() {
                         </div>
 
                         <div className="grid grid-cols-2 gap-2">
-                          {/* Botón Agregar al Carrito (NO redirige a WhatsApp) */}
                           <button
                             type="button"
                             onClick={(e) => handleAddToCart(e, product)}
@@ -149,7 +140,6 @@ export default function PromoBannerSection() {
                             )}
                           </button>
 
-                          {/* Botón Ver Detalle */}
                           <button
                             type="button"
                             onClick={() => openQuickView(product)}
@@ -166,36 +156,18 @@ export default function PromoBannerSection() {
               })}
             </div>
 
-            {/* Flechas de desplazamiento manual */}
-            {featuredImperdibles.length > 2 && (
-              <>
-                <button
-                  type="button"
-                  onClick={scrollLeft}
-                  aria-label="Desplazar a la izquierda"
-                  className="hidden md:flex absolute -left-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 items-center justify-center rounded-full bg-neutral-900/90 text-white border border-neutral-700 shadow-xl opacity-0 group-hover/carousel:opacity-100 transition-opacity hover:bg-black cursor-pointer"
-                >
-                  <ChevronLeft className="w-5 h-5" />
-                </button>
-                <button
-                  type="button"
-                  onClick={scrollRight}
-                  aria-label="Desplazar a la derecha"
-                  className="hidden md:flex absolute -right-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 items-center justify-center rounded-full bg-neutral-900/90 text-white border border-neutral-700 shadow-xl opacity-0 group-hover/carousel:opacity-100 transition-opacity hover:bg-black cursor-pointer"
-                >
-                  <ChevronRight className="w-5 h-5" />
-                </button>
-              </>
-            )}
+            {/* Difuminados laterales oscuros para sensación infinita */}
+            <div className="pointer-events-none absolute inset-y-0 left-0 w-12 sm:w-20 bg-gradient-to-r from-[#151214] to-transparent z-10" />
+            <div className="pointer-events-none absolute inset-y-0 right-0 w-12 sm:w-20 bg-gradient-to-l from-[#151214] to-transparent z-10" />
           </div>
         )}
 
         {/* ============================================================ */}
-        {/* MODO 2: CUADRÍCULA ESTÁTICA                                  */}
+        {/* MODO 2: CUADRÍCULA PROGRESIVA (DE 4 EN 4)                    */}
         {/* ============================================================ */}
         {viewMode === "grid" && (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6 animate-in fade-in duration-300">
-            {featuredImperdibles.map((product) => {
+            {featuredImperdibles.slice(0, visibleCount).map((product) => {
               const imgSrc =
                 product.imagen_principal_url || product.imagen_url || BRAND.fallbackImageUrl;
               const isJustAdded = !!addedIds[product.id];
@@ -258,25 +230,44 @@ export default function PromoBannerSection() {
         )}
 
         {/* Controles inferiores para alternar entre carrusel y cuadrícula */}
-        <div className="mt-10 sm:mt-12 flex items-center justify-center">
+        <div className="mt-10 sm:mt-12 flex flex-wrap items-center justify-center gap-3">
           {viewMode === "carousel" ? (
             <button
               type="button"
-              onClick={() => setViewMode("grid")}
+              onClick={() => {
+                setViewMode("grid");
+                setVisibleCount(4);
+              }}
               className="px-6 py-2.5 bg-white/10 hover:bg-white/15 text-white text-xs tracking-widest uppercase font-semibold rounded-sm flex items-center gap-2 border border-white/15 transition-all cursor-pointer active:scale-95"
             >
               <LayoutGrid className="w-4 h-4 text-[#E8C5C8]" />
               <span>Ver imperdibles en cuadrícula</span>
             </button>
           ) : (
-            <button
-              type="button"
-              onClick={() => setViewMode("carousel")}
-              className="px-6 py-2.5 bg-white/10 hover:bg-white/15 text-white text-xs tracking-widest uppercase font-semibold rounded-sm flex items-center gap-2 border border-white/15 transition-all cursor-pointer active:scale-95"
-            >
-              <RotateCcw className="w-4 h-4 text-[#E8C5C8]" />
-              <span>Volver a carrusel</span>
-            </button>
+            <>
+              <button
+                type="button"
+                onClick={() => {
+                  setViewMode("carousel");
+                  setVisibleCount(4);
+                }}
+                className="px-6 py-2.5 bg-white/10 hover:bg-white/15 text-white text-xs tracking-widest uppercase font-semibold rounded-sm flex items-center gap-2 border border-white/15 transition-all cursor-pointer active:scale-95"
+              >
+                <RotateCcw className="w-4 h-4 text-[#E8C5C8]" />
+                <span>Volver a carrusel</span>
+              </button>
+
+              {hasMore && (
+                <button
+                  type="button"
+                  onClick={() => setVisibleCount((prev) => prev + 4)}
+                  className="px-6 py-2.5 bg-[#D89BA3] hover:bg-[#c98c94] text-neutral-950 text-xs tracking-widest uppercase font-bold rounded-sm flex items-center gap-2 shadow-md transition-all cursor-pointer active:scale-95"
+                >
+                  <span>Ver más</span>
+                  <ArrowRight className="w-3.5 h-3.5 text-neutral-950" />
+                </button>
+              )}
+            </>
           )}
         </div>
       </div>
