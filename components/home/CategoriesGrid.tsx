@@ -21,8 +21,8 @@ export default function CategoriesGrid() {
         </p>
       </div>
 
-      {/* Cuadrícula Balanceada: 2 columnas en móvil, 3 en tablet y escritorio (2 filas de 3) */}
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-5 lg:gap-6 w-full">
+      {/* Cuadrícula Balanceada: 2 columnas en móvil, 4 en tablet y escritorio (1 fila de 4) */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5 lg:gap-6 w-full">
         {CATEGORIES.map((category) => (
           <Link
             key={category.id}

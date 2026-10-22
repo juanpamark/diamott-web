@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { Sparkles, Award } from "lucide-react";
+import { Sparkles, Award, Phone, Mail } from "lucide-react";
 import { useCatalog } from "@/context/CatalogContext";
 
 const DEFAULT_FOUNDER_IMAGE =
@@ -15,7 +15,7 @@ export default function AboutFounder() {
   const imgSrc = !imgError && creatorImageUrl ? creatorImageUrl : DEFAULT_FOUNDER_IMAGE;
 
   return (
-    <section className="w-full bg-[#FAFAFA] py-16 sm:py-24 border-t border-neutral-100">
+    <section id="nosotros" className="w-full bg-[#FAFAFA] py-16 sm:py-24 border-t border-neutral-100 scroll-mt-20">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-10 lg:gap-16 items-center">
           {/* Fotografía / Retrato */}
@@ -65,6 +65,36 @@ export default function AboutFounder() {
               <div className="flex items-center gap-2">
                 <Sparkles className="w-4 h-4 text-[#D89BA3]" />
                 <span>Productos garantizados</span>
+              </div>
+            </div>
+
+            {/* Datos oficiales de contacto (informativo, texto plano, sin enlaces) */}
+            <div className="mt-4 pt-6 border-t border-neutral-200/70">
+              <p className="text-[11px] font-semibold tracking-wider uppercase text-neutral-400 mb-3 text-center md:text-left">
+                Canales oficiales de atención
+              </p>
+              <div className="flex flex-wrap items-center justify-center md:justify-start gap-y-2 gap-x-6 text-xs text-neutral-600 select-all">
+                <div className="flex items-center gap-2">
+                  <Phone className="w-3.5 h-3.5 text-neutral-400" />
+                  <span>317 059 3785</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Mail className="w-3.5 h-3.5 text-neutral-400" />
+                  <span>diamott.beauty@gmail.com</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <svg
+                    className="w-3.5 h-3.5 text-neutral-400 fill-none stroke-current stroke-2"
+                    viewBox="0 0 24 24"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
+                    <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+                    <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
+                  </svg>
+                  <span>@diamott_beauty</span>
+                </div>
               </div>
             </div>
           </div>

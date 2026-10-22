@@ -118,6 +118,18 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         )
         .join("\n");
 
+      const deliveryLines: string[] = [];
+      if (customerData.nombre?.trim()) {
+        deliveryLines.push(`- Nombre: ${customerData.nombre.trim()}`);
+      }
+      if (customerData.direccionCiudad?.trim()) {
+        deliveryLines.push(`- Direccion / Ciudad: ${customerData.direccionCiudad.trim()}`);
+      }
+      deliveryLines.push(`- Metodo de pago: ${customerData.metodoPago || "A convenir"}`);
+
+      const deliverySection = `📍 *Datos de entrega y pago:*
+${deliveryLines.join("\n")}`;
+
       const message = `✨ *NUEVO PEDIDO - DI'AMOTT*
 
 🛍️ *Productos solicitados:*
@@ -125,11 +137,7 @@ ${productLines}
 
 💰 *Total a pagar:* ${formatCurrency(subtotal)}
 
-📍 *Datos de entrega:*
-- Nombre: ${customerData.nombre.trim()}
-- Cedula: ${customerData.cedula.trim()}
-- Direccion / Ciudad: ${customerData.direccionCiudad.trim()}
-- Metodo de pago: ${customerData.metodoPago}
+${deliverySection}
 
 Hola Di'amott, deseo confirmar la disponibilidad de estos productos para realizar el pago de mi pedido.`;
 

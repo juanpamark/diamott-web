@@ -23,12 +23,9 @@ export default function CartDrawer() {
 
   const [formData, setFormData] = useState<CheckoutCustomerData>({
     nombre: "",
-    cedula: "",
     direccionCiudad: "",
     metodoPago: "Nequi",
   });
-
-  const [formErrors, setFormErrors] = useState<{ [key: string]: string }>({});
 
   // Bloquear scroll de la página cuando el Drawer esté abierto
   useEffect(() => {
@@ -55,19 +52,7 @@ export default function CartDrawer() {
 
   const handleCheckoutSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-
-    const errors: { [key: string]: string } = {};
-    if (!formData.nombre.trim()) errors.nombre = "Ingresa tu nombre completo";
-    if (!formData.cedula.trim()) errors.cedula = "Ingresa tu número de cédula";
-    if (!formData.direccionCiudad.trim())
-      errors.direccionCiudad = "Ingresa tu dirección y ciudad";
-
-    if (Object.keys(errors).length > 0) {
-      setFormErrors(errors);
-      return;
-    }
-
-    setFormErrors({});
+    // Campos opcionales: no bloquean el pedido hacia WhatsApp
     checkoutViaWhatsApp(formData);
   };
 
@@ -231,65 +216,32 @@ export default function CartDrawer() {
 
                   <div>
                     <label className="block text-[11px] uppercase tracking-wider text-neutral-600 font-medium mb-1">
-                      Nombre Completo *
+                      Nombre Completo <span className="text-neutral-400 font-normal lowercase">(opcional)</span>
                     </label>
                     <input
                       type="text"
-                      required
                       value={formData.nombre}
                       onChange={(e) => {
                         setFormData({ ...formData, nombre: e.target.value });
-                        if (formErrors.nombre) setFormErrors({ ...formErrors, nombre: "" });
                       }}
                       placeholder="Ej. Jeniffer Motato"
                       className="w-full px-3 py-2 text-xs bg-neutral-50 border border-neutral-200 rounded-sm text-neutral-900 focus:outline-none focus:ring-1 focus:ring-neutral-900 focus:bg-white"
                     />
-                    {formErrors.nombre && (
-                      <p className="text-[10px] text-rose-600 mt-0.5">{formErrors.nombre}</p>
-                    )}
                   </div>
 
                   <div>
                     <label className="block text-[11px] uppercase tracking-wider text-neutral-600 font-medium mb-1">
-                      Cédula / Documento *
+                      Dirección y Ciudad <span className="text-neutral-400 font-normal lowercase">(opcional)</span>
                     </label>
                     <input
                       type="text"
-                      required
-                      value={formData.cedula}
-                      onChange={(e) => {
-                        setFormData({ ...formData, cedula: e.target.value });
-                        if (formErrors.cedula) setFormErrors({ ...formErrors, cedula: "" });
-                      }}
-                      placeholder="Ej. 1020304050"
-                      className="w-full px-3 py-2 text-xs bg-neutral-50 border border-neutral-200 rounded-sm text-neutral-900 focus:outline-none focus:ring-1 focus:ring-neutral-900 focus:bg-white"
-                    />
-                    {formErrors.cedula && (
-                      <p className="text-[10px] text-rose-600 mt-0.5">{formErrors.cedula}</p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label className="block text-[11px] uppercase tracking-wider text-neutral-600 font-medium mb-1">
-                      Dirección y Ciudad *
-                    </label>
-                    <input
-                      type="text"
-                      required
                       value={formData.direccionCiudad}
                       onChange={(e) => {
                         setFormData({ ...formData, direccionCiudad: e.target.value });
-                        if (formErrors.direccionCiudad)
-                          setFormErrors({ ...formErrors, direccionCiudad: "" });
                       }}
                       placeholder="Ej. Calle 10 #20-30, Medellín"
                       className="w-full px-3 py-2 text-xs bg-neutral-50 border border-neutral-200 rounded-sm text-neutral-900 focus:outline-none focus:ring-1 focus:ring-neutral-900 focus:bg-white"
                     />
-                    {formErrors.direccionCiudad && (
-                      <p className="text-[10px] text-rose-600 mt-0.5">
-                        {formErrors.direccionCiudad}
-                      </p>
-                    )}
                   </div>
 
                   <div>

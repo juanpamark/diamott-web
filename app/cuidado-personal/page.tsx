@@ -11,14 +11,14 @@ import { matchesSubcategory } from "@/lib/catalog-utils";
 
 export default function CuidadoPersonalPage() {
   const { getProductsByPage, isLoading, error } = useCatalog();
-  const [activeFilter, setActiveFilter] = useState("Todo");
+  const [activeFilter, setActiveFilter] = useState("Todos");
 
-  // Obtener productos de Cuidado personal (admite Cuidado personal, Cuidado facial o Skincare en el CSV)
+  // Obtener productos de Cuidado personal (admite Cuidado personal, facial, skincare, capilar y fragancias)
   const personalCareProducts = getProductsByPage("Cuidado personal");
 
-  // Filtrar según la subcategoría del CSV de forma tolerante (Todo, Rostro, Cuerpo)
+  // Filtrar según la subcategoría del CSV de forma tolerante (Todos, Facial, Corporal, Capilar, Fragancias & Splashes)
   const filteredProducts =
-    activeFilter === "Todo"
+    activeFilter === "Todos" || activeFilter === "Todo"
       ? personalCareProducts
       : personalCareProducts.filter((item) => matchesSubcategory(item.subcategoria, activeFilter));
 

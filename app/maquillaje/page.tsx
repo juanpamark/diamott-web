@@ -12,14 +12,14 @@ import { matchesSubcategory } from "@/lib/catalog-utils";
 
 export default function MaquillajePage() {
   const { getProductsByPage, isLoading, error } = useCatalog();
-  const [activeFilter, setActiveFilter] = useState("Todo");
+  const [activeFilter, setActiveFilter] = useState("Todos");
 
   // Obtener productos cuya página sea "Maquillaje"
   const makeupProducts = getProductsByPage("Maquillaje");
 
-  // Filtrar según la subcategoría del CSV (Rostro, Labios, Ojos y cejas)
+  // Filtrar según la subcategoría del CSV
   const filteredProducts =
-    activeFilter === "Todo"
+    activeFilter === "Todos" || activeFilter === "Todo"
       ? makeupProducts
       : makeupProducts.filter((item) => matchesSubcategory(item.subcategoria, activeFilter));
 
@@ -28,7 +28,7 @@ export default function MaquillajePage() {
       {/* Hero Section */}
       <CategoryHero
         title="Maquillaje"
-        subtitle="Texturas sedosas, pigmentación intensa y acabados profesionales para cada momento."
+        subtitle="Texturas sedosas, alta pigmentación y acabados profesionales para cada momento."
         imageUrl="https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?q=80&w=1600&auto=format&fit=crop"
       />
 

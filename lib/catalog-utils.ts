@@ -80,9 +80,25 @@ export function parseAvailability(val: unknown): boolean {
  */
 export function matchesSubcategory(productSubcat: string | undefined, filter: string): boolean {
   const normFilter = normalizeCleanText(filter).toLowerCase();
-  if (!normFilter || normFilter === "todo") return true;
+  if (!normFilter || normFilter === "todo" || normFilter === "todos") return true;
 
   const normSub = normalizeCleanText(productSubcat).toLowerCase();
+
+  // Alias para cuidado personal
+  if (normFilter === "facial" && (normSub.includes("rostro") || normSub.includes("facial"))) return true;
+  if (normFilter === "corporal" && (normSub.includes("cuerpo") || normSub.includes("corporal"))) return true;
+  if (normFilter === "capilar" && (normSub.includes("capilar") || normSub.includes("cabello"))) return true;
+  if (
+    (normFilter.includes("fragancia") || normFilter.includes("splash")) &&
+    (normSub.includes("fragancia") || normSub.includes("splash"))
+  ) {
+    return true;
+  }
+
+  // Alias para maquillaje: ojos vs cejas
+  if (normFilter === "ojos" && normSub.includes("ojos")) return true;
+  if (normFilter === "cejas" && normSub.includes("cejas")) return true;
+
   if (!normSub) return false;
 
   // Coincidencia exacta

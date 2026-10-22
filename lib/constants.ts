@@ -50,9 +50,8 @@ export interface CartItem {
 }
 
 export interface CheckoutCustomerData {
-  nombre: string;
-  cedula: string;
-  direccionCiudad: string;
+  nombre?: string;
+  direccionCiudad?: string;
   metodoPago: "Nequi" | "Daviplata" | "Bancolombia" | string;
 }
 
@@ -63,11 +62,13 @@ export interface NavLinkItem {
 }
 
 export const NAV_LINKS: NavLinkItem[] = [
-  { label: "maquillaje", href: "/maquillaje" },
+  { label: "inicio", href: "/" },
   { label: "nuevo", href: "/#nuevos" },
   { label: "más vendidos", href: "/mas-vendidos" },
   { label: "categorías", href: "/#categorias", isDropdown: true },
-  { label: "encargar producto", href: "/#encargar" },
+  { label: "maquillaje", href: "/maquillaje" },
+  { label: "¿no lo ves? pídelo aquí", href: "/#encargar" },
+  { label: "nosotros", href: "/#nosotros" },
 ];
 
 export const CATEGORIES = [
@@ -79,38 +80,24 @@ export const CATEGORIES = [
     subtitle: "Rostro, labios, ojos y cejas con acabados profesionales",
   },
   {
-    id: "bolsos",
-    name: "Bolsos",
-    href: "/bolsos",
-    image: "https://images.unsplash.com/photo-1584917865442-de89df76afd3?q=80&w=900&auto=format&fit=crop",
-    subtitle: "Diseños versátiles, estilo y acabados modernos",
-  },
-  {
     id: "cuidado-personal",
     name: "Cuidado personal",
     href: "/cuidado-personal",
     image: "https://images.unsplash.com/photo-1556228720-195a672e8a03?q=80&w=900&auto=format&fit=crop",
-    subtitle: "Fórmulas hidratantes para rostro y cuerpo",
-  },
-  {
-    id: "capilar",
-    name: "Capilar",
-    href: "/capilar",
-    image: "https://images.unsplash.com/photo-1527799820374-dcf8d9d4a388?q=80&w=900&auto=format&fit=crop",
-    subtitle: "Cuidado diario y nutrición profunda",
+    subtitle: "Facial, corporal, capilar, fragancias y splashes",
   },
   {
     id: "accesorios",
     name: "Accesorios",
     href: "/accesorios",
     image: "https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?q=80&w=900&auto=format&fit=crop",
-    subtitle: "Detalles que transforman y completan tu look",
+    subtitle: "Aretes, cadenas, pulseras y detalles que transforman tu look",
   },
   {
-    id: "fragancias",
-    name: "Fragancias",
-    href: "/fragancias",
-    image: "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?q=80&w=900&auto=format&fit=crop",
-    subtitle: "Splash corporales, aromas frescos y notas envolventes",
+    id: "bolsos",
+    name: "Bolsos",
+    href: "/bolsos",
+    image: "https://images.unsplash.com/photo-1584917865442-de89df76afd3?q=80&w=900&auto=format&fit=crop",
+    subtitle: "Diseños versátiles, estilo y acabados modernos",
   },
 ];

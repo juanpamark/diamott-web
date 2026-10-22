@@ -12,13 +12,13 @@ import { matchesSubcategory } from "@/lib/catalog-utils";
 
 export default function AccesoriosPage() {
   const { getProductsByPage, isLoading, error } = useCatalog();
-  const [activeFilter, setActiveFilter] = useState("Todo");
+  const [activeFilter, setActiveFilter] = useState("Todos");
 
   const accesoriosProducts = getProductsByPage("Accesorios");
 
-  // Filtrar según la subcategoría del CSV: Todo, Aretes, Collares, Accesorios para el cabello
+  // Filtrar según la subcategoría del CSV
   const filteredProducts =
-    activeFilter === "Todo"
+    activeFilter === "Todos" || activeFilter === "Todo"
       ? accesoriosProducts
       : accesoriosProducts.filter((item) => matchesSubcategory(item.subcategoria, activeFilter));
 

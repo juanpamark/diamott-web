@@ -1,5 +1,5 @@
 export default function MarqueeTicker() {
-  const tickerItem = "MAQUILLAJE • BOLSOS • CUIDADO PERSONAL • ACCESORIOS • CAPILAR • FRAGANCIAS • MÁS VENDIDOS • ";
+  const tickerItem = "ENVÍOS A TODA COLOMBIA • COMPRA SEGURA POR WHATSAPP • TUS FAVORITOS EN UN SOLO LUGAR • ";
   // Repetimos varias veces para garantizar continuidad en cualquier ancho de pantalla
   const items = Array(8).fill(tickerItem);
 

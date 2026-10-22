@@ -48,6 +48,8 @@ interface CatalogContextType {
   closeQuickView: () => void;
   creatorImageUrl: string | null;
   heroConfig: HeroConfig;
+  heroSlides: HeroConfig[];
+  isHeroLoading: boolean;
 }
 
 const CatalogContext = createContext<CatalogContextType | undefined>(undefined);
@@ -82,6 +84,8 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
   const [products, setProducts] = useState<Product[]>([]);
   const [creatorImageUrl, setCreatorImageUrl] = useState<string | null>(null);
   const [heroConfig, setHeroConfig] = useState<HeroConfig>(DEFAULT_HERO_CONFIG);
+  const [heroSlides, setHeroSlides] = useState<HeroConfig[]>([]);
+  const [isHeroLoading, setIsHeroLoading] = useState<boolean>(true);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -237,54 +241,54 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
                   normalizeCleanText(header).toLowerCase().replace(/\s+/g, "_"),
                 transform: (val: string) => (typeof val === "string" ? val.trim() : val),
                 complete: (heroResults) => {
-                  if (isCancelled || !heroResults.data || heroResults.data.length === 0) return;
+                  if (isCancelled || !heroResults.data || heroResults.data.length === 0) {
+                    setIsHeroLoading(false);
+                    return;
+                  }
 
-                  // Buscar la fila que la usuaria haya activado con "SÍ" en la columna 'activo'
-                  const activeRow =
-                    heroResults.data.find(
-                      (row) =>
-                        row &&
-                        parseBooleanFlag(row.activo) &&
-                        Boolean(row.media_url || row.titulo)
-                    ) ||
-                    heroResults.data.find((row) => row && parseBooleanFlag(row.activo)) ||
-                    heroResults.data[0];
+                  // Filtrar todas las filas del CSV donde activo sea "SÍ"
+                  const activeRows = heroResults.data.filter(
+                    (row) => row && parseBooleanFlag(row.activo)
+                  );
 
-                  if (!activeRow) return;
+                  const parsedSlides: HeroConfig[] = activeRows.map((row) => {
+                    const rawMedia = sanitizeText(row.media_url);
+                    const isValidMedia =
+                      (rawMedia.startsWith("http://") || rawMedia.startsWith("https://")) &&
+                      !rawMedia.includes("[PEGAR");
 
-                  const rawMedia = sanitizeText(activeRow.media_url);
-                  const isValidMedia =
-                    (rawMedia.startsWith("http://") || rawMedia.startsWith("https://")) &&
-                    !rawMedia.includes("[PEGAR");
+                    const fondoLower = sanitizeText(row.tipo_fondo).toLowerCase();
+                    const isVideo =
+                      fondoLower === "video" ||
+                      rawMedia.endsWith(".mp4") ||
+                      rawMedia.endsWith(".webm") ||
+                      rawMedia.includes("/video/");
 
-                  const fondoLower = sanitizeText(activeRow.tipo_fondo).toLowerCase();
-                  const isVideo =
-                    fondoLower === "video" ||
-                    rawMedia.endsWith(".mp4") ||
-                    rawMedia.endsWith(".webm") ||
-                    rawMedia.includes("/video/");
-
-                  setHeroConfig({
-                    activo:
-                      activeRow.activo !== undefined
-                        ? parseBooleanFlag(activeRow.activo)
-                        : true,
-                    tipo_fondo: isVideo ? "video" : "imagen",
-                    media_url: isValidMedia ? rawMedia : BRAND.heroVideoUrl,
-                    titulo: sanitizeText(activeRow.titulo) || DEFAULT_HERO_CONFIG.titulo,
-                    subtitulo:
-                      sanitizeText(activeRow.subtitulo) || DEFAULT_HERO_CONFIG.subtitulo,
-                    texto_boton:
-                      sanitizeText(activeRow.texto_boton) || DEFAULT_HERO_CONFIG.texto_boton,
-                    enlace_boton:
-                      sanitizeText(activeRow.enlace_boton) || DEFAULT_HERO_CONFIG.enlace_boton,
+                    return {
+                      activo: true,
+                      tipo_fondo: isVideo ? "video" : "imagen",
+                      media_url: isValidMedia ? rawMedia : "",
+                      titulo: sanitizeText(row.titulo) || DEFAULT_HERO_CONFIG.titulo,
+                      subtitulo: sanitizeText(row.subtitulo) || DEFAULT_HERO_CONFIG.subtitulo,
+                      texto_boton: sanitizeText(row.texto_boton) || DEFAULT_HERO_CONFIG.texto_boton,
+                      enlace_boton: sanitizeText(row.enlace_boton) || DEFAULT_HERO_CONFIG.enlace_boton,
+                    };
                   });
+
+                  setHeroSlides(parsedSlides);
+                  if (parsedSlides.length > 0) {
+                    setHeroConfig(parsedSlides[0]);
+                  }
+                  setIsHeroLoading(false);
                 },
               });
             }
+          } else {
+            setIsHeroLoading(false);
           }
         } catch (heroErr) {
           console.warn("Aviso: No se pudo cargar el CSV dinámico del hero:", heroErr);
+          setIsHeroLoading(false);
         }
       } catch (err: unknown) {
         if (isCancelled) return;
@@ -323,7 +327,9 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
           pPage === "cuidado-personal" ||
           pPage === "cuidado facial" ||
           pPage === "cuidado-facial" ||
-          pPage === "skincare";
+          pPage === "skincare" ||
+          pPage === "capilar" ||
+          pPage === "fragancias";
         if (isPersonalCareTarget && isPersonalCarePage) return true;
         return false;
       });
@@ -348,30 +354,12 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
     [products]
   );
 
-  // Los 3 productos de "Los Imperdibles" (seleccionados en Google Sheets con es_promocion_banner)
+  // Todos los productos de "Los Imperdibles" (marcados en Google Sheets con es_promocion_banner)
   const featuredImperdibles = useMemo(() => {
     const marked = products.filter((p) => p.es_promocion_banner);
-    if (marked.length >= 3) return marked.slice(0, 3);
-
-    // Si hay menos de 3 marcados, complementar con los más vendidos o nuevos
-    const result = [...marked];
-    const seenIds = new Set(result.map((p) => p.id));
-
-    for (const p of products) {
-      if (result.length >= 3) break;
-      if (!seenIds.has(p.id) && (p.es_mas_vendido || p.es_nuevo)) {
-        result.push(p);
-        seenIds.add(p.id);
-      }
-    }
-    for (const p of products) {
-      if (result.length >= 3) break;
-      if (!seenIds.has(p.id)) {
-        result.push(p);
-        seenIds.add(p.id);
-      }
-    }
-    return result.slice(0, 3);
+    if (marked.length > 0) return marked;
+    // Si ninguno está marcado explícitamente, tomar los más vendidos como respaldo
+    return products.filter((p) => p.es_mas_vendido);
   }, [products]);
 
   const openQuickView = useCallback((product: Product) => {
@@ -399,6 +387,8 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
         closeQuickView,
         creatorImageUrl,
         heroConfig,
+        heroSlides,
+        isHeroLoading,
       }}
     >
       {children}
