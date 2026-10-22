@@ -74,14 +74,14 @@ export default function PromoBannerSection() {
                     onClick={() => openQuickView(product)}
                     className="w-64 sm:w-72 shrink-0 flex flex-col bg-neutral-900/90 rounded-2xl border border-neutral-800 hover:border-neutral-700 overflow-hidden shadow-xl transition-all duration-300 group cursor-pointer"
                   >
-                    {/* Imagen del producto */}
+                    {/* Imagen del producto con Adaptación Universal */}
                     <div className="relative aspect-square w-full overflow-hidden bg-neutral-950">
                       <Image
                         src={imgSrc}
                         alt={product.nombre_producto}
                         fill
                         sizes="(max-width: 640px) 256px, 288px"
-                        className="object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+                        className="object-contain p-2.5 sm:p-3 transition-transform duration-500 ease-out group-hover:scale-105"
                       />
                       <div className="absolute top-3 left-3">
                         <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-black/80 backdrop-blur-md text-[#E8C5C8] text-[9px] font-bold tracking-widest uppercase border border-white/10">
@@ -184,7 +184,7 @@ export default function PromoBannerSection() {
                       alt={product.nombre_producto}
                       fill
                       sizes="(max-width: 768px) 50vw, 25vw"
-                      className="object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+                      className="object-contain p-2.5 sm:p-3 transition-transform duration-500 ease-out group-hover:scale-105"
                     />
                   </div>
                   <div className="p-4 flex flex-col grow justify-between space-y-2">

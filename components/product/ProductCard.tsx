@@ -55,15 +55,15 @@ export default function ProductCard({ product }: ProductCardProps) {
       className="group relative flex flex-col bg-white border border-neutral-100 rounded-sm overflow-hidden transition-all duration-300 hover:border-neutral-200 hover:shadow-md cursor-pointer text-left focus:outline-none focus:ring-1 focus:ring-neutral-900"
       aria-label={`Ver detalle de ${product.nombre_producto}`}
     >
-      {/* Contenedor de Imagen con Relación 1:1 Cuadrada */}
-      <div className="relative aspect-square w-full overflow-hidden bg-neutral-50">
+      {/* Contenedor de Imagen con Relación 1:1 Cuadrada y Adaptación Universal */}
+      <div className="relative aspect-square w-full overflow-hidden bg-[#FAF9F7]">
         <Image
           src={imgSrc}
           alt={product.nombre_producto}
           fill
           sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
           onError={handleImageError}
-          className={`object-cover transition-all duration-500 ease-out ${
+          className={`object-contain p-2.5 sm:p-3 transition-all duration-500 ease-out ${
             product.imagen_secundaria_url ? "group-hover:opacity-0" : "group-hover:scale-105"
           }`}
         />
@@ -74,7 +74,7 @@ export default function ProductCard({ product }: ProductCardProps) {
             alt={`${product.nombre_producto} - Detalle`}
             fill
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-            className="object-cover transition-all duration-500 ease-out opacity-0 group-hover:opacity-100 group-hover:scale-105"
+            className="object-contain p-2.5 sm:p-3 transition-all duration-500 ease-out opacity-0 group-hover:opacity-100 group-hover:scale-105"
           />
         )}
 

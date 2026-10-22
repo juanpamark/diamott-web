@@ -89,8 +89,8 @@ function ProductQuickViewContent({ product, onClose }: ContentProps) {
         <div className="grid grid-cols-1 sm:grid-cols-2">
           {/* Columna Izquierda: Galería / Doble Imagen */}
           <div className="relative flex flex-col bg-neutral-50 sm:border-r border-neutral-100">
-            {/* Foto Grande */}
-            <div className="relative aspect-square w-full overflow-hidden bg-neutral-100">
+            {/* Foto Grande con Adaptación Universal */}
+            <div className="relative aspect-square w-full overflow-hidden bg-[#FAF9F7]">
               <Image
                 src={currentDisplayImage}
                 alt={product.nombre_producto}
@@ -101,7 +101,7 @@ function ProductQuickViewContent({ product, onClose }: ContentProps) {
                   if (activeImageIndex === 0) setPrimaryImageFailed(true);
                   else setSecondaryImageFailed(true);
                 }}
-                className="object-cover transition-opacity duration-300"
+                className="object-contain p-4 sm:p-6 transition-opacity duration-300"
               />
 
               {/* Flechas de navegación para alternar doble imagen */}

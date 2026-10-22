@@ -121,8 +121,8 @@ export default function CartDrawer() {
                 <div className="divide-y divide-neutral-100">
                   {items.map((item) => (
                     <div key={item.product.id} className="py-4 flex gap-3 sm:gap-4">
-                      {/* Imagen con fallback */}
-                      <div className="relative w-20 h-20 aspect-square rounded-sm overflow-hidden bg-neutral-50 shrink-0 border border-neutral-100">
+                      {/* Imagen con Adaptación Universal */}
+                      <div className="relative w-20 h-20 aspect-square rounded-sm overflow-hidden bg-[#FAF9F7] shrink-0 border border-neutral-100">
                         <Image
                           src={
                             item.product.imagen_principal_url ||
@@ -132,7 +132,7 @@ export default function CartDrawer() {
                           alt={item.product.nombre_producto}
                           fill
                           sizes="80px"
-                          className="object-cover"
+                          className="object-contain p-1"
                         />
                       </div>
 
