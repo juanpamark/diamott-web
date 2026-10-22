@@ -46,17 +46,17 @@ export const metadata: Metadata = {
   icons: {
     icon: [
       {
-        url: "https://res.cloudinary.com/xdjdubsz/image/upload/e_trim/v1792191401/Dise%C3%B1o_sin_t%C3%ADtulo.png",
+        url: "https://res.cloudinary.com/xdjdubsz/image/upload/v1792697255/clogodia.png",
         sizes: "any",
       },
     ],
     apple: [
       {
-        url: "https://res.cloudinary.com/xdjdubsz/image/upload/e_trim/v1792191401/Dise%C3%B1o_sin_t%C3%ADtulo.png",
+        url: "https://res.cloudinary.com/xdjdubsz/image/upload/v1792697255/clogodia.png",
         sizes: "180x180",
       },
     ],
-    shortcut: "https://res.cloudinary.com/xdjdubsz/image/upload/e_trim/v1792191401/Dise%C3%B1o_sin_t%C3%ADtulo.png",
+    shortcut: "https://res.cloudinary.com/xdjdubsz/image/upload/v1792697255/clogodia.png",
   },
   openGraph: {
     title: "Di'amott | Beauty and Accessories",
