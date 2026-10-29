@@ -105,7 +105,7 @@ export default function Navbar() {
                 src={BRAND.officialLogoUrl}
                 alt="Di'amott"
                 fill
-                priority
+                loading="eager"
                 sizes="(max-width: 640px) 176px, 256px"
                 className="object-contain transition-transform duration-300 group-hover:scale-102"
               />
