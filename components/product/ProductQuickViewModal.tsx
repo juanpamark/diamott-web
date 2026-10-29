@@ -95,7 +95,6 @@ function ProductQuickViewContent({ product, onClose }: ContentProps) {
                 src={currentDisplayImage}
                 alt={product.nombre_producto}
                 fill
-                priority
                 sizes="(max-width: 640px) 100vw, 50vw"
                 onError={() => {
                   if (activeImageIndex === 0) setPrimaryImageFailed(true);

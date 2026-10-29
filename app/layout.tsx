@@ -11,14 +11,14 @@ import WhatsAppFloatingButton from "@/components/shared/WhatsAppFloatingButton";
 
 const montserrat = Montserrat({
   subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700"],
+  weight: ["400", "500", "600", "700"],
   variable: "--font-montserrat",
   display: "swap",
 });
 
 const playfair = Playfair_Display({
   subsets: ["latin"],
-  weight: ["400", "600", "700", "800"],
+  weight: ["400", "700"],
   variable: "--font-playfair",
   display: "swap",
 });

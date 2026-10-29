@@ -155,6 +155,9 @@ export default function Navbar() {
             <div className="relative max-w-xl mx-auto">
               <input
                 type="text"
+                id="catalog-search-input"
+                name="searchQuery"
+                aria-label="Buscar productos en el catálogo de Di'amott"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Buscar en todo el catálogo (ej. labial, base, serum, bolso, aretes)..."

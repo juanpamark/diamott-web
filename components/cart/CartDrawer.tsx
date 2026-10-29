@@ -217,11 +217,13 @@ export default function CartDrawer() {
                   </div>
 
                   <div>
-                    <label className="block text-[11px] uppercase tracking-wider text-neutral-600 font-medium mb-1">
+                    <label htmlFor="checkout-customer-name" className="block text-[11px] uppercase tracking-wider text-neutral-600 font-medium mb-1">
                       Nombre Completo <span className="text-neutral-400 font-normal lowercase">(opcional)</span>
                     </label>
                     <input
                       type="text"
+                      id="checkout-customer-name"
+                      name="customerName"
                       value={formData.nombre}
                       onChange={(e) => {
                         setFormData({ ...formData, nombre: e.target.value });
@@ -232,11 +234,13 @@ export default function CartDrawer() {
                   </div>
 
                   <div>
-                    <label className="block text-[11px] uppercase tracking-wider text-neutral-600 font-medium mb-1">
+                    <label htmlFor="checkout-customer-address" className="block text-[11px] uppercase tracking-wider text-neutral-600 font-medium mb-1">
                       Dirección y Ciudad <span className="text-neutral-400 font-normal lowercase">(opcional)</span>
                     </label>
                     <input
                       type="text"
+                      id="checkout-customer-address"
+                      name="customerAddress"
                       value={formData.direccionCiudad}
                       onChange={(e) => {
                         setFormData({ ...formData, direccionCiudad: e.target.value });

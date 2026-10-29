@@ -84,6 +84,9 @@ export default function SpecialOrder() {
               <div className="relative">
                 <input
                   type="text"
+                  id="special-order-query"
+                  name="productQuery"
+                  aria-label="Nombre o referencia del producto a encargar"
                   value={productQuery}
                   onChange={(e) => {
                     setProductQuery(e.target.value);
