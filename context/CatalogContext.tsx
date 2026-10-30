@@ -61,6 +61,7 @@ import {
   parseBooleanFlag,
   parseAvailability,
 } from "@/lib/catalog-utils";
+import { optimizeCloudinaryUrl } from "@/lib/cloudinary";
 
 // Sanitizador básico contra inyección XSS
 function sanitizeText(input: string | undefined): string {
@@ -80,232 +81,353 @@ const DEFAULT_HERO_CONFIG: HeroConfig = {
   enlace_boton: "/#imperdibles",
 };
 
+const CATALOG_STORAGE_KEY = "diamott_catalog_cache_v2";
+const HERO_STORAGE_KEY = "diamott_hero_cache_v2";
+const CACHE_TTL_MS = 10 * 60 * 1000; // 10 minutos de caché local
+
+interface CatalogCachePayload {
+  timestamp: number;
+  products: Product[];
+  creatorImageUrl: string | null;
+}
+
+interface HeroCachePayload {
+  timestamp: number;
+  heroSlides: HeroConfig[];
+  heroConfig: HeroConfig;
+}
+
+function readCatalogCache(): CatalogCachePayload | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = sessionStorage.getItem(CATALOG_STORAGE_KEY);
+    if (!raw) return null;
+    const parsed: CatalogCachePayload = JSON.parse(raw);
+    if (parsed && Array.isArray(parsed.products) && Date.now() - parsed.timestamp < CACHE_TTL_MS) {
+      return parsed;
+    }
+  } catch {
+    // Silencioso
+  }
+  return null;
+}
+
+function readHeroCache(): HeroCachePayload | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = sessionStorage.getItem(HERO_STORAGE_KEY);
+    if (!raw) return null;
+    const parsed: HeroCachePayload = JSON.parse(raw);
+    if (parsed && Array.isArray(parsed.heroSlides) && Date.now() - parsed.timestamp < CACHE_TTL_MS) {
+      return parsed;
+    }
+  } catch {
+    // Silencioso
+  }
+  return null;
+}
+
 export function CatalogProvider({ children }: { children: React.ReactNode }) {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [creatorImageUrl, setCreatorImageUrl] = useState<string | null>(null);
-  const [heroConfig, setHeroConfig] = useState<HeroConfig>(DEFAULT_HERO_CONFIG);
-  const [heroSlides, setHeroSlides] = useState<HeroConfig[]>([]);
-  const [isHeroLoading, setIsHeroLoading] = useState<boolean>(true);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  // Inicialización perezosa desde caché de sessionStorage para 0ms de espera y cero parpadeo
+  const initialCatalog = readCatalogCache();
+  const initialHero = readHeroCache();
+
+  const [products, setProducts] = useState<Product[]>(() => initialCatalog?.products || []);
+  const [creatorImageUrl, setCreatorImageUrl] = useState<string | null>(
+    () => initialCatalog?.creatorImageUrl || null
+  );
+  const [heroConfig, setHeroConfig] = useState<HeroConfig>(
+    () => initialHero?.heroConfig || DEFAULT_HERO_CONFIG
+  );
+  const [heroSlides, setHeroSlides] = useState<HeroConfig[]>(() => initialHero?.heroSlides || []);
+  const [isHeroLoading, setIsHeroLoading] = useState<boolean>(() => !initialHero);
+  const [isLoading, setIsLoading] = useState<boolean>(() => !initialCatalog);
   const [error, setError] = useState<string | null>(null);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [reloadTrigger, setReloadTrigger] = useState<number>(0);
 
   const refreshCatalog = useCallback(() => {
+    if (typeof window !== "undefined") {
+      try {
+        sessionStorage.removeItem(CATALOG_STORAGE_KEY);
+        sessionStorage.removeItem(HERO_STORAGE_KEY);
+      } catch {
+        // Silencioso
+      }
+    }
     setReloadTrigger((prev) => prev + 1);
   }, []);
 
   useEffect(() => {
     let isCancelled = false;
 
-    async function loadData() {
-      try {
-        const response = await fetch(`${BRAND.sheetsCsvUrl}&t=${Date.now()}`, {
-          cache: "no-store",
-        });
+    async function fetchCatalogData() {
+      // 1. Si ya tenemos caché válida y no es un refresco manual deliberado, no hacer fetch
+      const cachedCatalog = readCatalogCache();
+      if (cachedCatalog && reloadTrigger === 0) {
+        setProducts(cachedCatalog.products);
+        setCreatorImageUrl(cachedCatalog.creatorImageUrl);
+        setIsLoading(false);
+        return;
+      }
 
-        if (!response.ok) {
-          throw new Error(`Error al descargar el catálogo CSV (${response.status})`);
+      try {
+        let catalogData: { products: Product[]; creatorImageUrl: string | null } | null = null;
+
+        // Intentar primero el endpoint de Edge / Cloudflare Pages Functions (/api/catalog)
+        try {
+          const apiRes = await fetch("/api/catalog");
+          if (apiRes.ok) {
+            const json = await apiRes.json();
+            if (json && Array.isArray(json.products)) {
+              catalogData = {
+                products: json.products,
+                creatorImageUrl: json.creatorImageUrl || null,
+              };
+            }
+          }
+        } catch {
+          // Fallback en desarrollo local sin Cloudflare Functions
         }
 
-        const csvText = await response.text();
-        if (isCancelled) return;
+        // Si el endpoint de API no está activo (ej. dev local), fallback a Google Sheets CSV directo
+        if (!catalogData) {
+          const response = await fetch(BRAND.sheetsCsvUrl);
+          if (!response.ok) {
+            throw new Error(`Error al descargar el catálogo CSV (${response.status})`);
+          }
 
-        Papa.parse<RawProductRow>(csvText, {
-          header: true,
-          skipEmptyLines: "greedy",
-          dynamicTyping: false,
-          // Normalizar encabezados: minúsculas, sin tildes, sin espacios para tolerancia total
-          transformHeader: (header: string) => {
-            return normalizeCleanText(header)
-              .toLowerCase()
-              .replace(/\s+/g, "_");
-          },
-          // Limpiar cada celda de texto
-          transform: (val: string) => {
-            return typeof val === "string" ? val.trim() : val;
-          },
-          complete: (results) => {
-            if (isCancelled) return;
-            try {
-              // Buscar fila especial de configuración para la creadora
-              const creatorRow = results.data.find(
-                (row) =>
-                  sanitizeText(row.id).toLowerCase() === "config_creadora" ||
-                  sanitizeText(row.pagina).toLowerCase() === "config"
-              );
-              const rawCreatorImg = sanitizeText(
-                creatorRow?.imagen_principal_url || creatorRow?.imagen_url
-              );
-              if (rawCreatorImg.startsWith("http://") || rawCreatorImg.startsWith("https://")) {
-                setCreatorImageUrl(rawCreatorImg);
-              } else {
-                setCreatorImageUrl(null);
-              }
+          const csvText = await response.text();
+          if (isCancelled) return;
 
-              const parsedProducts: Product[] = results.data
-                .filter((row) => {
-                  if (!row.id || !row.nombre_producto) return false;
-                  // Si es la fila de configuración de la creadora, omitirla del catálogo comercial
-                  if (
-                    sanitizeText(row.id).toLowerCase() === "config_creadora" ||
-                    sanitizeText(row.pagina).toLowerCase() === "config"
-                  ) {
-                    return false;
-                  }
-
-                  // Tolerancia total a disponibilidad (disponible si SÍ o celda vacía; oculto si NO)
-                  return parseAvailability(row.disponible);
-                })
-                .map((row, index) => {
-                  // Precios: descartar decimales si vienen como 35000.00
-                  const rawPriceStr = String(row.precio ?? "0").trim();
-                  const withoutDecimals = rawPriceStr.replace(/[.,]\d{2}$/, "");
-                  const cleanDigits = withoutDecimals.replace(/[^0-9]/g, "");
-                  const numericPrice = parseInt(cleanDigits, 10) || 0;
-
-                  // Calificación flotante (admite 4.8, 5, etc.)
-                  const rawRating = parseFloat(
-                    String(row.calificacion ?? "5").replace(",", ".")
-                  );
-                  const numericRating = Math.min(
-                    5,
-                    Math.max(1, isNaN(rawRating) ? 5 : rawRating)
-                  );
-
-                  const numericReviews = parseInt(String(row.numero_resenas ?? "0"), 10) || 0;
-
-                  // Imágenes: soporte imagen_principal_url y retrocompatibilidad imagen_url
-                  const rawMainImg = sanitizeText(
-                    row.imagen_principal_url || row.imagen_url
-                  );
-                  const isMainValid =
-                    rawMainImg.startsWith("http://") || rawMainImg.startsWith("https://");
-                  const mainImageUrl = isMainValid ? rawMainImg : BRAND.fallbackImageUrl;
-
-                  const rawSecImg = sanitizeText(row.imagen_secundaria_url);
-                  const isSecValid =
-                    rawSecImg.startsWith("http://") || rawSecImg.startsWith("https://");
-                  const secondaryImageUrl = isSecValid ? rawSecImg : undefined;
-
-                  return {
-                    id: sanitizeText(row.id) || `prod-${index}`,
-                    nombre_producto: sanitizeText(row.nombre_producto),
-                    pagina: sanitizeText(row.pagina),
-                    subcategoria: sanitizeText(row.subcategoria),
-                    precio: numericPrice,
-                    precioFormateado: formatCurrency(numericPrice),
-                    calificacion: numericRating,
-                    numero_resenas: numericReviews,
-                    imagen_principal_url: mainImageUrl,
-                    imagen_secundaria_url: secondaryImageUrl,
-                    imagen_url: mainImageUrl,
-                    descripcion_corta: sanitizeText(row.descripcion_corta),
-                    disponible: true,
-                    es_nuevo: parseBooleanFlag(row.es_nuevo),
-                    es_mas_vendido: parseBooleanFlag(row.es_mas_vendido),
-                    es_promocion_banner: parseBooleanFlag(row.es_promocion_banner),
-                  };
-                });
-
-              setProducts(parsedProducts);
-              setError(null);
-            } catch (err) {
-              console.error("Error al procesar los datos del CSV:", err);
-              setError("Error al procesar el inventario");
-            } finally {
-              setIsLoading(false);
-            }
-          },
-          error: (err: Error) => {
-            if (isCancelled) return;
-            console.error("Error en PapaParse:", err);
-            setError("Error al leer el archivo de Google Sheets");
-            setIsLoading(false);
-          },
-        });
-
-        // Cargar configuración de Hero dinámico desde la pestaña correspondiente
-        try {
-          const heroResponse = await fetch(`${BRAND.heroSheetsCsvUrl}&t=${Date.now()}`, {
-            cache: "no-store",
+          const results = Papa.parse<RawProductRow>(csvText, {
+            header: true,
+            skipEmptyLines: "greedy",
+            dynamicTyping: false,
+            transformHeader: (header: string) =>
+              normalizeCleanText(header).toLowerCase().replace(/\s+/g, "_"),
+            transform: (val: string) => (typeof val === "string" ? val.trim() : val),
           });
+
+          const creatorRow = results.data.find(
+            (row) =>
+              sanitizeText(row.id).toLowerCase() === "config_creadora" ||
+              sanitizeText(row.pagina).toLowerCase() === "config"
+          );
+          const rawCreatorImg = sanitizeText(
+            creatorRow?.imagen_principal_url || creatorRow?.imagen_url
+          );
+          const cImg =
+            rawCreatorImg.startsWith("http://") || rawCreatorImg.startsWith("https://")
+              ? optimizeCloudinaryUrl(rawCreatorImg)
+              : null;
+
+          const parsedProducts: Product[] = results.data
+            .filter((row) => {
+              if (!row.id || !row.nombre_producto) return false;
+              if (
+                sanitizeText(row.id).toLowerCase() === "config_creadora" ||
+                sanitizeText(row.pagina).toLowerCase() === "config"
+              ) {
+                return false;
+              }
+              return parseAvailability(row.disponible);
+            })
+            .map((row, index) => {
+              const rawPriceStr = String(row.precio ?? "0").trim();
+              const withoutDecimals = rawPriceStr.replace(/[.,]\d{2}$/, "");
+              const cleanDigits = withoutDecimals.replace(/[^0-9]/g, "");
+              const numericPrice = parseInt(cleanDigits, 10) || 0;
+
+              const rawRating = parseFloat(String(row.calificacion ?? "5").replace(",", "."));
+              const numericRating = Math.min(5, Math.max(1, isNaN(rawRating) ? 5 : rawRating));
+              const numericReviews = parseInt(String(row.numero_resenas ?? "0"), 10) || 0;
+
+              const rawMainImg = sanitizeText(row.imagen_principal_url || row.imagen_url);
+              const isMainValid =
+                rawMainImg.startsWith("http://") || rawMainImg.startsWith("https://");
+              const mainImageUrl = isMainValid
+                ? optimizeCloudinaryUrl(rawMainImg)
+                : BRAND.fallbackImageUrl;
+
+              const rawSecImg = sanitizeText(row.imagen_secundaria_url);
+              const isSecValid =
+                rawSecImg.startsWith("http://") || rawSecImg.startsWith("https://");
+              const secondaryImageUrl = isSecValid
+                ? optimizeCloudinaryUrl(rawSecImg)
+                : undefined;
+
+              return {
+                id: sanitizeText(row.id) || `prod-${index}`,
+                nombre_producto: sanitizeText(row.nombre_producto),
+                pagina: sanitizeText(row.pagina),
+                subcategoria: sanitizeText(row.subcategoria),
+                precio: numericPrice,
+                precioFormateado: formatCurrency(numericPrice),
+                calificacion: numericRating,
+                numero_resenas: numericReviews,
+                imagen_principal_url: mainImageUrl,
+                imagen_secundaria_url: secondaryImageUrl,
+                imagen_url: mainImageUrl,
+                descripcion_corta: sanitizeText(row.descripcion_corta),
+                disponible: true,
+                es_nuevo: parseBooleanFlag(row.es_nuevo),
+                es_mas_vendido: parseBooleanFlag(row.es_mas_vendido),
+                es_promocion_banner: parseBooleanFlag(row.es_promocion_banner),
+              };
+            });
+
+          catalogData = { products: parsedProducts, creatorImageUrl: cImg };
+        }
+
+        if (isCancelled || !catalogData) return;
+
+        setProducts(catalogData.products);
+        setCreatorImageUrl(catalogData.creatorImageUrl);
+        setError(null);
+        setIsLoading(false);
+
+        if (typeof window !== "undefined") {
+          try {
+            sessionStorage.setItem(
+              CATALOG_STORAGE_KEY,
+              JSON.stringify({
+                timestamp: Date.now(),
+                products: catalogData.products,
+                creatorImageUrl: catalogData.creatorImageUrl,
+              })
+            );
+          } catch {
+            // Silencioso
+          }
+        }
+      } catch (err: unknown) {
+        if (isCancelled) return;
+        console.error("Error al cargar inventario:", err);
+        setError(err instanceof Error ? err.message : "Error al conectar con Google Sheets");
+        setIsLoading(false);
+      }
+    }
+
+    async function fetchHeroData() {
+      const cachedHero = readHeroCache();
+      if (cachedHero && reloadTrigger === 0) {
+        setHeroSlides(cachedHero.heroSlides);
+        setHeroConfig(cachedHero.heroConfig);
+        setIsHeroLoading(false);
+        return;
+      }
+
+      try {
+        let heroData: { heroSlides: HeroConfig[]; heroConfig: HeroConfig } | null = null;
+
+        // Intentar primero el endpoint de Edge (/api/hero)
+        try {
+          const heroApiRes = await fetch("/api/hero");
+          if (heroApiRes.ok) {
+            const json = await heroApiRes.json();
+            if (json && Array.isArray(json.heroSlides)) {
+              heroData = {
+                heroSlides: json.heroSlides,
+                heroConfig: json.heroConfig || DEFAULT_HERO_CONFIG,
+              };
+            }
+          }
+        } catch {
+          // Fallback en desarrollo local
+        }
+
+        if (!heroData) {
+          const heroResponse = await fetch(BRAND.heroSheetsCsvUrl);
           if (heroResponse.ok) {
             const heroCsvText = await heroResponse.text();
             if (!isCancelled) {
-              Papa.parse<RawHeroRow>(heroCsvText, {
+              const heroResults = Papa.parse<RawHeroRow>(heroCsvText, {
                 header: true,
                 skipEmptyLines: "greedy",
                 dynamicTyping: false,
                 transformHeader: (header: string) =>
                   normalizeCleanText(header).toLowerCase().replace(/\s+/g, "_"),
                 transform: (val: string) => (typeof val === "string" ? val.trim() : val),
-                complete: (heroResults) => {
-                  if (isCancelled || !heroResults.data || heroResults.data.length === 0) {
-                    setIsHeroLoading(false);
-                    return;
-                  }
-
-                  // Filtrar todas las filas del CSV donde activo sea "SÍ"
-                  const activeRows = heroResults.data.filter(
-                    (row) => row && parseBooleanFlag(row.activo)
-                  );
-
-                  const parsedSlides: HeroConfig[] = activeRows.map((row) => {
-                    const rawMedia = sanitizeText(row.media_url);
-                    const isValidMedia =
-                      (rawMedia.startsWith("http://") || rawMedia.startsWith("https://")) &&
-                      !rawMedia.includes("[PEGAR");
-
-                    const fondoLower = sanitizeText(row.tipo_fondo).toLowerCase();
-                    const isVideo =
-                      fondoLower === "video" ||
-                      rawMedia.endsWith(".mp4") ||
-                      rawMedia.endsWith(".webm") ||
-                      rawMedia.includes("/video/");
-
-                    return {
-                      activo: true,
-                      tipo_fondo: isVideo ? "video" : "imagen",
-                      media_url: isValidMedia ? rawMedia : "",
-                      titulo: sanitizeText(row.titulo) || DEFAULT_HERO_CONFIG.titulo,
-                      subtitulo: sanitizeText(row.subtitulo) || DEFAULT_HERO_CONFIG.subtitulo,
-                      texto_boton: sanitizeText(row.texto_boton) || DEFAULT_HERO_CONFIG.texto_boton,
-                      enlace_boton: sanitizeText(row.enlace_boton) || DEFAULT_HERO_CONFIG.enlace_boton,
-                    };
-                  });
-
-                  setHeroSlides(parsedSlides);
-                  if (parsedSlides.length > 0) {
-                    setHeroConfig(parsedSlides[0]);
-                  }
-                  setIsHeroLoading(false);
-                },
               });
+
+              const activeRows = (heroResults.data || []).filter(
+                (row) => row && parseBooleanFlag(row.activo)
+              );
+
+              const parsedSlides: HeroConfig[] = activeRows.map((row) => {
+                const rawMedia = sanitizeText(row.media_url);
+                const isValidMedia =
+                  (rawMedia.startsWith("http://") || rawMedia.startsWith("https://")) &&
+                  !rawMedia.includes("[PEGAR");
+
+                const fondoLower = sanitizeText(row.tipo_fondo).toLowerCase();
+                const isVideo =
+                  fondoLower === "video" ||
+                  rawMedia.endsWith(".mp4") ||
+                  rawMedia.endsWith(".webm") ||
+                  rawMedia.includes("/video/");
+
+                const optimizedMedia = isValidMedia
+                  ? isVideo
+                    ? rawMedia
+                    : optimizeCloudinaryUrl(rawMedia)
+                  : "";
+
+                return {
+                  activo: true,
+                  tipo_fondo: (isVideo ? "video" : "imagen") as "video" | "imagen",
+                  media_url: optimizedMedia,
+                  titulo: sanitizeText(row.titulo) || DEFAULT_HERO_CONFIG.titulo,
+                  subtitulo: sanitizeText(row.subtitulo) || DEFAULT_HERO_CONFIG.subtitulo,
+                  texto_boton: sanitizeText(row.texto_boton) || DEFAULT_HERO_CONFIG.texto_boton,
+                  enlace_boton: sanitizeText(row.enlace_boton) || DEFAULT_HERO_CONFIG.enlace_boton,
+                };
+              });
+
+              const primaryHero = parsedSlides.length > 0 ? parsedSlides[0] : DEFAULT_HERO_CONFIG;
+              heroData = {
+                heroSlides: parsedSlides.length > 0 ? parsedSlides : [DEFAULT_HERO_CONFIG],
+                heroConfig: primaryHero,
+              };
             }
-          } else {
-            setIsHeroLoading(false);
           }
-        } catch (heroErr) {
-          console.warn("Aviso: No se pudo cargar el CSV dinámico del hero:", heroErr);
-          setIsHeroLoading(false);
         }
-      } catch (err: unknown) {
-        if (isCancelled) return;
-        console.error("Error en Client-side fetch del CSV:", err);
-        setError(err instanceof Error ? err.message : "Error al conectar con Google Sheets");
-        setIsLoading(false);
+
+        if (isCancelled || !heroData) {
+          setIsHeroLoading(false);
+          return;
+        }
+
+        setHeroSlides(heroData.heroSlides);
+        setHeroConfig(heroData.heroConfig);
+        setIsHeroLoading(false);
+
+        if (typeof window !== "undefined") {
+          try {
+            sessionStorage.setItem(
+              HERO_STORAGE_KEY,
+              JSON.stringify({
+                timestamp: Date.now(),
+                heroSlides: heroData.heroSlides,
+                heroConfig: heroData.heroConfig,
+              })
+            );
+          } catch {
+            // Silencioso
+          }
+        }
+      } catch (heroErr) {
+        console.warn("Aviso: No se pudo cargar el banner hero:", heroErr);
+        setIsHeroLoading(false);
       }
     }
 
-    loadData();
-
-    // Actualización periódica en segundo plano cada 60 segundos
-    const interval = setInterval(loadData, 60000);
+    fetchCatalogData();
+    fetchHeroData();
 
     return () => {
       isCancelled = true;
-      clearInterval(interval);
     };
   }, [reloadTrigger]);
 

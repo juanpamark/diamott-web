@@ -3,30 +3,35 @@
 import Image from "next/image";
 import { ExternalLink } from "lucide-react";
 import { BRAND } from "@/lib/constants";
+import { optimizeCloudinaryUrl } from "@/lib/cloudinary";
 
 const INSTAGRAM_POSTS = [
   {
     id: "post-1",
-    imageUrl:
-      "https://res.cloudinary.com/xdjdubsz/image/upload/v1792703921/WhatsApp_Image_2026-10-17_at_12.28.50.jpg",
+    imageUrl: optimizeCloudinaryUrl(
+      "https://res.cloudinary.com/xdjdubsz/image/upload/v1792703921/WhatsApp_Image_2026-10-17_at_12.28.50.jpg"
+    ),
     alt: "Di'amott Beauty Lookbook Publicitario 1",
   },
   {
     id: "post-2",
-    imageUrl:
-      "https://res.cloudinary.com/xdjdubsz/image/upload/v1792703922/WhatsApp_Image_2026-10-17_at_12.28.44.jpg",
+    imageUrl: optimizeCloudinaryUrl(
+      "https://res.cloudinary.com/xdjdubsz/image/upload/v1792703922/WhatsApp_Image_2026-10-17_at_12.28.44.jpg"
+    ),
     alt: "Di'amott Beauty Lookbook Publicitario 2",
   },
   {
     id: "post-3",
-    imageUrl:
-      "https://res.cloudinary.com/xdjdubsz/image/upload/v1792703922/WhatsApp_Image_2026-10-17_at_12.28.32.jpg",
+    imageUrl: optimizeCloudinaryUrl(
+      "https://res.cloudinary.com/xdjdubsz/image/upload/v1792703922/WhatsApp_Image_2026-10-17_at_12.28.32.jpg"
+    ),
     alt: "Di'amott Beauty Lookbook Publicitario 3",
   },
   {
     id: "post-4",
-    imageUrl:
-      "https://res.cloudinary.com/xdjdubsz/image/upload/v1792703923/WhatsApp_Image_2026-10-17_at_12.28.23.jpg",
+    imageUrl: optimizeCloudinaryUrl(
+      "https://res.cloudinary.com/xdjdubsz/image/upload/v1792703923/WhatsApp_Image_2026-10-17_at_12.28.23.jpg"
+    ),
     alt: "Di'amott Beauty Lookbook Publicitario 4",
   },
 ];

@@ -4,9 +4,11 @@ import { useState } from "react";
 import Image from "next/image";
 import { Sparkles, Award, Phone, Mail } from "lucide-react";
 import { useCatalog } from "@/context/CatalogContext";
+import { optimizeCloudinaryUrl } from "@/lib/cloudinary";
 
-const DEFAULT_FOUNDER_IMAGE =
-  "https://res.cloudinary.com/xdjdubsz/image/upload/v1792197616/WhatsApp_Image_2026-10-15_at_16.43.45_1.jpg";
+const DEFAULT_FOUNDER_IMAGE = optimizeCloudinaryUrl(
+  "https://res.cloudinary.com/xdjdubsz/image/upload/v1792197616/WhatsApp_Image_2026-10-15_at_16.43.45_1.jpg"
+);
 
 export default function AboutFounder() {
   const { creatorImageUrl } = useCatalog();

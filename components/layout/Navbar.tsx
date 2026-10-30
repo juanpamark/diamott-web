@@ -100,14 +100,17 @@ export default function Navbar() {
             className="flex items-center justify-center group focus:outline-none"
             aria-label={`${BRAND.name} - Inicio`}
           >
-            <div className="relative h-14 sm:h-20 w-44 sm:w-64">
-              <Image
+            <div className="relative h-14 sm:h-20 w-44 sm:w-64 flex items-center justify-center">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
                 src={BRAND.officialLogoUrl}
                 alt="Di'amott"
-                fill
                 loading="eager"
-                sizes="(max-width: 640px) 176px, 256px"
-                className="object-contain transition-transform duration-300 group-hover:scale-102"
+                fetchPriority="high"
+                decoding="async"
+                width={256}
+                height={80}
+                className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-102"
               />
             </div>
           </Link>

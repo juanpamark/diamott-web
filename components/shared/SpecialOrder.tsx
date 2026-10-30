@@ -3,6 +3,7 @@
 import { useState, FormEvent } from "react";
 import Image from "next/image";
 import { Send, Sparkles } from "lucide-react";
+import { optimizeCloudinaryUrl } from "@/lib/cloudinary";
 
 export default function SpecialOrder() {
   const [productQuery, setProductQuery] = useState("");
@@ -48,7 +49,9 @@ export default function SpecialOrder() {
           {/* Fotografía Fija Editorial del Producto Premium (Labial Di'amott) */}
           <div className="relative aspect-square max-w-md mx-auto w-full rounded-2xl overflow-hidden bg-white border border-[#E8C5C8]/60 shadow-xl group">
             <Image
-              src="https://res.cloudinary.com/xdjdubsz/image/upload/v1792196060/11b0b0bc-3a3d-4af4-bc73-6ab9f424af94.jpg"
+              src={optimizeCloudinaryUrl(
+                "https://res.cloudinary.com/xdjdubsz/image/upload/v1792196060/11b0b0bc-3a3d-4af4-bc73-6ab9f424af94.jpg"
+              )}
               alt="Producto Exclusivo Di'amott - Encargo Especial"
               fill
               sizes="(max-width: 768px) 100vw, 500px"

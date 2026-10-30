@@ -1,12 +1,15 @@
+import { optimizeCloudinaryUrl } from "@/lib/cloudinary";
+
 export const BRAND = {
   name: "Di'amott",
   domain: "diamott.com",
   instagramUrl: "https://www.instagram.com/diamott_beauty?xtok=MXhvdXo0aGFlNGNydw==",
-  officialLogoUrl: "https://res.cloudinary.com/xdjdubsz/image/upload/v1792697255/clogodia.png",
-  fallbackImageUrl: "https://res.cloudinary.com/xdjdubsz/image/upload/v1792697255/clogodia.png",
+  officialLogoUrl: optimizeCloudinaryUrl("https://res.cloudinary.com/xdjdubsz/image/upload/v1792697255/clogodia.png"),
+  fallbackImageUrl: optimizeCloudinaryUrl("https://res.cloudinary.com/xdjdubsz/image/upload/v1792697255/clogodia.png"),
   heroVideoUrl: "https://res.cloudinary.com/xdjdubsz/video/upload/v1792198504/hero2.mp4",
   whatsappNumber: process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "+573170593785",
   whatsappCheckoutUrl: "https://wa.me/573170593785",
+  // Fallbacks de solo lectura para desarrollo local sin Cloudflare Functions
   sheetsCsvUrl:
     process.env.NEXT_PUBLIC_SHEETS_CSV_URL ||
     "https://docs.google.com/spreadsheets/d/e/2PACX-1vQm6VelNXSvA07xJ_p4nYWfc_GHHpBtKuE7UfiQAJCbBWrCYiLVdC49V9e9n0zb6ULapqOrTuP4b9AZ/pub?output=csv",
